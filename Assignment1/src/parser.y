@@ -230,8 +230,9 @@ id_list : T_ID
 			if (cst_only == 1) {
 				Node* id_list = new Node(SymbolClass::ID_LIST);
 
-				id_list->append_child($1);
 				id_list->append_child(new Node(SymbolClass::ID));
+				id_list->append_child(new Node(SymbolClass::COMMA));
+				id_list->append_child($1);
 
 				$$ = id_list;
 			} else {
@@ -267,6 +268,7 @@ expr_list 	: expression
 					Node* expr_list = new Node(SymbolClass::EXPRESSION_LIST);
 
 					expr_list->append_child($1);
+					expr_list->append_child(new Node(SymbolClass::COMMA));
 					expr_list->append_child($3);
 
 					$$ = expr_list;
