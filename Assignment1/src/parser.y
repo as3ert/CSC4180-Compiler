@@ -48,16 +48,14 @@ Node* root_node = nullptr;
 
 /* TODO: define terminal symbols with %token. Remember to set the type. */
 %token <intval> T_INTLITERAL
-%token <strval> T_ID
-%token T_BEGIN_ T_END T_READ T_WRITE T_LPAREN T_RPAREN T_SEMICOLON T_COMMA T_ASSIGNOP T_PLUSOP T_MINUSOP T_SCANEOF
+%token <strval> T_BEGIN_ T_END T_READ T_WRITE T_LPAREN T_RPAREN T_SEMICOLON 
+%token <strval> T_COMMA T_ASSIGNOP T_PLUSOP T_MINUSOP T_SCANEOF T_ID
 
 /* Start Symbol */
 %start start
 
 /* TODO: define Non-Terminal Symbols with %type. Remember to set the type. */
-%type <nodeval> program statement_list statement id_list expr_list expression primary add_op
-
-/* %type program statement_list statement id_list expr_list expression primary add_op */
+%type <nodeval> program statement_list statement id_list expr_list expression primary
 
 %%
 
@@ -72,18 +70,19 @@ Node* root_node = nullptr;
 /* The tree generation logic should be in the operation block of each production rule */
 start 	: program T_SCANEOF 
 	  	{
-			/* Create a new node with the start symbol */
-			Node* start = new Node(SymbolClass::START);
+			// printf("Processing start rule\n");
 
-			/* Set the children of the start node with the children of parsed program node */
-			start->children = $1->children;
+			if (cst_only == 1) {
+				Node* start = new Node(SymbolClass::START);
 
-			/* Add scanEOF symbol as a child of start node */
-			Node* scanEOF = new Node(SymbolClass::SCANEOF);
-			start->children.push_back(scanEOF);
+				start->append_child($1);
+				start->append_child(new Node(SymbolClass::SCANEOF));
 
-			/* Set the start node as the root node of the tree */
-			root_node = start;
+				root_node = start;
+			} else {
+				// printf("Processing start rule\n");
+				root_node = $1;
+			}
 
 	  		return 0; 
 	  	}
@@ -91,80 +90,311 @@ start 	: program T_SCANEOF
 
 program : T_BEGIN_ statement_list T_END 
 		{
-			/* Create a new node with the program symbol */
+			// printf("Processing program rule\n");
+
 			Node* program = new Node(SymbolClass::PROGRAM);
 
-			/* Add begin_ symbol as a child of program node */
-			Node* begin_ = new Node(SymbolClass::BEGIN_);
-			start->children.push_back(begin_);
+			if (cst_only == 1) {
+				program->append_child(new Node(SymbolClass::BEGIN_));
+				program->append_child($2);
+				program->append_child(new Node(SymbolClass::END));
+			} else {
+				// printf("rocessing program rule\n");
+				program->append_child($2);
+			}
 
-			/* Set the children of the program node with the parsed statement list node */
-			program->children = $2->children;
-
-			/* Add end symbol as a child of program node */
-			Node* end = new Node(SymbolClass::END);
-			start->children.push_back(end);
-
-			/* Set the program node as the root node of the tree */
 			$$ = program;
 		}
 		;
 
 statement_list 	: statement
 				{
-					/* Create a new node with the statement list symbol */
+					printf("Processing statement_list rule (single statement)\n");
+
 					Node* statement_list = new Node(SymbolClass::STATEMENT_LIST);
 
-					/* Set the children of the statement list node with the children of parsed statement node */
-					statement_list->children = $1->children;
+					statement_list->append_child($1);
 
-					/* Set the statement list node as the root node of the tree */
 					$$ = statement_list;
 				}
 			   	| statement_list statement
 			   	{
-					/* Set the children of the parsed statement list node with the children of the parsed statement node */
-					$1->children.insert($1->children.end(), $2->children.begin(), $2->children.end());
+					// printf("Processing statement_list rule (additional statement)\n");
 
-					/* Set the statement list node as the root node of the tree */
-					$$ = $1;
+					if (cst_only == 1) {
+						Node* statement_list = new Node(SymbolClass::STATEMENT_LIST);
+
+						statement_list->append_child($1);
+						statement_list->append_child($2);
+
+						$$ = statement_list;
+					} else {
+						// printf("Processing statement_list rule (additional statement)\n");
+						$1->append_child($2);
+
+						$$ = $1;
+					}
 			   	}
 			   	;
 
 statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON 
 			{
+				// printf("Processing assignment statement rule\n");
+
+				if (cst_only == 1) {
+					Node* statement = new Node(SymbolClass::STATEMENT);
+
+					statement->append_child(new Node(SymbolClass::ID));
+					statement->append_child(new Node(SymbolClass::ASSIGNOP));
+					statement->append_child($3);
+					statement->append_child(new Node(SymbolClass::SEMICOLON));
+
+					$$ = statement;
+				} else {
+					// printf("Processing assignment statement rule\n");
+					Node* assignop = new Node(SymbolClass::ASSIGNOP, $2);
+
+					assignop->append_child(new Node(SymbolClass::ID, $1));
+					assignop->append_child($3);
+
+					$$ = assignop;
+				}
 		  	}
 		  	| T_READ T_LPAREN id_list T_RPAREN T_SEMICOLON 
 			{
+				// printf("Processing read statement rule\n");
+				
+				if (cst_only == 1) {
+					Node* statement = new Node(SymbolClass::STATEMENT);
 
+					statement->append_child(new Node(SymbolClass::READ));
+					statement->append_child(new Node(SymbolClass::LPAREN));
+					statement->append_child($3);
+					statement->append_child(new Node(SymbolClass::RPAREN));
+					statement->append_child(new Node(SymbolClass::SEMICOLON));
+
+					$$ = statement;
+				} else {
+					// printf("Processing read statement rule\n");
+					Node* read = new Node(SymbolClass::READ, $1);
+
+					read->append_child($3);
+
+					$$ = read;
+				}
 		  	}
 		  	| T_WRITE T_LPAREN expr_list T_RPAREN T_SEMICOLON
+			{
+				// printf("Processing write statement rule\n");
+
+				if (cst_only == 1) {
+					Node* statement = new Node(SymbolClass::STATEMENT);
+
+					statement->append_child(new Node(SymbolClass::WRITE));
+					statement->append_child(new Node(SymbolClass::LPAREN));
+					statement->append_child($3);
+					statement->append_child(new Node(SymbolClass::RPAREN));
+					statement->append_child(new Node(SymbolClass::SEMICOLON));
+
+					$$ = statement;
+				} else {
+					// printf("Processing write statement rule\n");
+					Node* write = new Node(SymbolClass::WRITE, $1);
+
+					write->append_child($3);
+
+					$$ = write;
+				}
+			}
 		  	;
 
 id_list : T_ID
+		{
+			// printf("Processing id_list rule (single ID)\n");
+
+			if (cst_only == 1) {
+				Node* id_list = new Node(SymbolClass::ID_LIST);
+
+				id_list->append_child(new Node(SymbolClass::ID));
+
+				$$ = id_list;
+			} else {
+				// printf("Processing id_list rule (single ID)\n");
+				$$->append_child(new Node(SymbolClass::ID, $1));
+			}
+		}
 		| id_list T_COMMA T_ID
+		{
+			// printf("Processing id_list rule (additional ID)\n");
+
+			if (cst_only == 1) {
+				Node* id_list = new Node(SymbolClass::ID_LIST);
+
+				id_list->append_child($1);
+				id_list->append_child(new Node(SymbolClass::ID));
+
+				$$ = id_list;
+			} else {
+				// printf("Processing id_list rule (additional ID)\n");
+				// TODO: Modify the node logic
+				$$->append_child(new Node(SymbolClass::ID, $3));
+
+				$$ = $1;
+			}
+		}
 		;
 
 expr_list 	: expression
+			{
+				// printf("Processing expr_list rule (single expression)\n");
+
+				if (cst_only == 1) {
+					Node* expr_list = new Node(SymbolClass::EXPRESSION_LIST);
+
+					expr_list->append_child($1);
+
+					$$ = expr_list;
+				} else {
+					// printf("Processing expr_list rule (single expression)\n");
+					$$ = $1;
+				}
+			}
 		  	| expr_list T_COMMA expression
+		  	{
+				// printf("Processing expr_list rule (additional expression)\n");
+
+				if (cst_only == 1) {
+					Node* expr_list = new Node(SymbolClass::EXPRESSION_LIST);
+
+					expr_list->append_child($1);
+					expr_list->append_child($3);
+
+					$$ = expr_list;
+				} else {
+					// printf("Processing expr_list rule (additional expression)\n");
+					$1->append_child($3);
+
+					$$ = $1;
+				}
+		  	}
 		  	;
 
 expression 	: primary
-		   	| expression add_op primary 
+			{
+				// printf("Processing expression rule (primary)\n");
+
+				if (cst_only == 1) {
+					Node* expression = new Node(SymbolClass::EXPRESSION);
+
+					expression->append_child($1);
+
+					$$ = expression;
+				} else {
+					// printf("Processing expression rule (primary)\n");
+					$$ = $1;
+				}
+			}
+		   	| expression T_PLUSOP primary 
+		   	{
+				// printf("Processing plus expression rule (expression + primary)\n");
+
+				if (cst_only == 1) {
+					Node* expression = new Node(SymbolClass::EXPRESSION);
+
+					expression->append_child($1);
+					expression->append_child(new Node(SymbolClass::PLUSOP));
+					expression->append_child($3);
+
+					$$ = expression;
+				} else {
+					// printf("Processing plus expression rule (expression + primary)\n");
+					Node* plusop = new Node(SymbolClass::PLUSOP, $2);
+
+					plusop->append_child($1);
+					plusop->append_child($3);
+
+					$$ = plusop;
+				}
+		   	}
+			| expression T_MINUSOP primary
+			{
+				// printf("Processing minus expression rule (expression + primary)\n");
+
+				if (cst_only == 1) {
+					Node* expression = new Node(SymbolClass::EXPRESSION);
+
+					expression->append_child($1);
+					expression->append_child(new Node(SymbolClass::MINUSOP));
+					expression->append_child($3);
+
+					$$ = expression;
+				} else {
+					// printf("Processing minus expression rule (expression + primary)\n");
+					Node* minusop = new Node(SymbolClass::MINUSOP, $2);
+
+					minusop->append_child($1);
+					minusop->append_child($3);
+
+					$$ = minusop;
+				}
+			}
 		   	;
 
 primary : T_LPAREN expression T_RPAREN
-		| T_ID
-		| T_INTLITERAL
-		;
+		{
+			// printf("Processing primary rule (parenthesized expression)\n");
 
-add_op 	: T_PLUSOP { $$ = '+'; }
-	   	| T_MINUSOP { $$ = '-'; }
-	   	;
+			if (cst_only == 1) {
+				Node* primary = new Node(SymbolClass::PRIMARY);
+
+				primary->append_child(new Node(SymbolClass::LPAREN));
+				primary->append_child($2);
+				primary->append_child(new Node(SymbolClass::RPAREN));
+
+				$$ = primary;
+			} else {
+				// printf("Processing primary rule (parenthesized expression)\n");
+				$$ = $2;
+			}
+		}
+		| T_ID
+		{
+			// printf("Processing primary rule (ID)\n");
+
+			if (cst_only == 1) {
+				Node* primary = new Node(SymbolClass::PRIMARY);
+
+				primary->append_child(new Node(SymbolClass::ID));
+
+				$$ = primary;
+			} else {
+				// printf("Processing primary rule (ID)\n");
+				$$ = new Node(SymbolClass::ID, $1);
+			}
+		}
+		| T_INTLITERAL
+		{
+			// printf("Processing primary rule (integer literal)\n");
+
+			if (cst_only == 1) {
+				Node* primary = new Node(SymbolClass::PRIMARY);
+
+				primary->append_child(new Node(SymbolClass::INTLITERAL));
+
+				$$ = primary;
+			} else {
+				// printf("Processing primary rule (integer literal)\n");
+				char intstr[11];
+				sprintf(intstr, "%d", $1);
+
+				$$ = new Node(SymbolClass::INTLITERAL, intstr);
+			}
+		}
+		;
 
 %%
 
 int yyerror(char *s) {
 	printf("Syntax Error on line %s\n", s);
-	return 0;
+	return 1;
 }

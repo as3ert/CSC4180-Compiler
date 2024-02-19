@@ -33,6 +33,7 @@ extern int scan_only;
 %}
 
 EOLN        "\n"
+TAB         "\t"
 COMMENT     --.*\n
 BEGIN_      "begin"
 END         "end"
@@ -51,28 +52,26 @@ INTLITERAL  -?[0-9]+
 %%
 
 {EOLN}          { /* Ignore newlines */ }
+{TAB}           { /* Ignore tabs */ }
 {COMMENT}       { /* Ignore comments */ }
-{BEGIN_}        {printf("<BEGIN_, %s>\n", yytext); return T_BEGIN_;}
-{END}           {printf("<END, %s>\n", yytext); return T_END;}
-{READ}          {printf("<READ, %s>\n", yytext); return T_READ;}
-{WRITE}         {printf("<WRITE, %s>\n", yytext); return T_WRITE;}
-{LPAREN}        {printf("<LPAREN, %s>\n", yytext); return T_LPAREN;}
-{RPAREN}        {printf("<RPAREN, %s>\n", yytext); return T_RPAREN;}
-{SEMICOLON}     {printf("<SEMICOLON, %s>\n", yytext); return T_SEMICOLON;}
-{COMMA}         {printf("<COMMA, %s>\n", yytext); return T_COMMA;}
-{ASSIGNOP}      {printf("<ASSIGNOP, %s>\n", yytext); return T_ASSIGNOP;}
-{PLUSOP}        {printf("<PLUSOP, %s>\n", yytext); return T_PLUSOP;}
-{MINUSOP}       {printf("<MINUSOP, %s>\n", yytext); return T_MINUSOP;}
-{ID}            {printf("<ID, %s>\n", yytext); return T_ID;}
-{INTLITERAL}    {printf("<INTLITERAL, %s>\n", yytext); return T_INTLITERAL;}
-<<EOF>>         {printf("<SCANEOF, %s>\n", yytext); yyterminate();}
+{BEGIN_}        { printf("<BEGIN_, %s>\n", yytext); yylval.strval = strdup(yytext); return T_BEGIN_; }
+{END}           { printf("<END, %s>\n", yytext); yylval.strval = strdup(yytext); return T_END; }
+{READ}          { printf("<READ, %s>\n", yytext); yylval.strval = strdup(yytext); return T_READ; }
+{WRITE}         { printf("<WRITE, %s>\n", yytext); yylval.strval = strdup(yytext); return T_WRITE; }
+{LPAREN}        { printf("<LPAREN, %s>\n", yytext); yylval.strval = strdup(yytext); return T_LPAREN; }
+{RPAREN}        { printf("<RPAREN, %s>\n", yytext); yylval.strval = strdup(yytext); return T_RPAREN; }
+{SEMICOLON}     { printf("<SEMICOLON, %s>\n", yytext); yylval.strval = strdup(yytext); return T_SEMICOLON; }
+{COMMA}         { printf("<COMMA, %s>\n", yytext); yylval.strval = strdup(yytext); return T_COMMA; }
+{ASSIGNOP}      { printf("<ASSIGNOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_ASSIGNOP; }
+{PLUSOP}        { printf("<PLUSOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_PLUSOP; }
+{MINUSOP}       { printf("<MINUSOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_MINUSOP; }
+{ID}            { printf("<ID, %s>\n", yytext); yylval.strval = strdup(yytext); return T_ID; }
+{INTLITERAL}    { printf("<INTLITERAL, %s>\n", yytext); yylval.intval = std::atoi(yytext); return T_INTLITERAL; }
+<<EOF>>         { printf("<SCANEOF>\n"); return T_SCANEOF; }
+
 .
 
 %%
-
-/* This line generates repeated <SCANEOF, <<EOF>>> outputs caused by the return value */
-/* TODO: Fix this return issue */
-/* <<EOF>>         {printf("<SCANEOF, <<EOF>>>\n"); return T_SCANEOF; yyterminate();} */
 
 int yywrap(void) {
     return 1;
