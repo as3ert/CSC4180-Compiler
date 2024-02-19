@@ -36,6 +36,7 @@ int yylex();
 extern int cst_only;
 
 Node* root_node = nullptr;
+Node* temp = nullptr;
 %}
 
 /* TODO: define yylval data types with %union */
@@ -80,7 +81,6 @@ start 	: program T_SCANEOF
 
 				root_node = start;
 			} else {
-				// printf("Processing start rule\n");
 				root_node = $1;
 			}
 
@@ -99,7 +99,6 @@ program : T_BEGIN_ statement_list T_END
 				program->append_child($2);
 				program->append_child(new Node(SymbolClass::END));
 			} else {
-				// printf("rocessing program rule\n");
 				program->append_child($2);
 			}
 
@@ -109,7 +108,7 @@ program : T_BEGIN_ statement_list T_END
 
 statement_list 	: statement
 				{
-					printf("Processing statement_list rule (single statement)\n");
+					// printf("Processing statement_list rule (single statement)\n");
 
 					Node* statement_list = new Node(SymbolClass::STATEMENT_LIST);
 
@@ -129,7 +128,6 @@ statement_list 	: statement
 
 						$$ = statement_list;
 					} else {
-						// printf("Processing statement_list rule (additional statement)\n");
 						$1->append_child($2);
 
 						$$ = $1;
@@ -151,7 +149,6 @@ statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON
 
 					$$ = statement;
 				} else {
-					// printf("Processing assignment statement rule\n");
 					Node* assignop = new Node(SymbolClass::ASSIGNOP, $2);
 
 					assignop->append_child(new Node(SymbolClass::ID, $1));
@@ -175,10 +172,14 @@ statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON
 
 					$$ = statement;
 				} else {
-					// printf("Processing read statement rule\n");
 					Node* read = new Node(SymbolClass::READ, $1);
 
-					read->append_child($3);
+					// if ($3->children.size() && !$3->should_preserver_in_ast()) {
+					if ($3->children.size()) {
+						read->children = $3->children;
+					} else {
+						read->append_child($3);
+					}
 
 					$$ = read;
 				}
@@ -198,10 +199,13 @@ statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON
 
 					$$ = statement;
 				} else {
-					// printf("Processing write statement rule\n");
 					Node* write = new Node(SymbolClass::WRITE, $1);
 
-					write->append_child($3);
+					if ($3->children.size() && !$3->should_preserver_in_ast()) {
+						write->children = $3->children;
+					} else {
+						write->append_child($3);
+					}
 
 					$$ = write;
 				}
@@ -211,37 +215,40 @@ statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON
 id_list : T_ID
 		{
 			// printf("Processing id_list rule (single ID)\n");
+				
+			Node* id_list = new Node(SymbolClass::ID_LIST);
 
 			if (cst_only == 1) {
-				Node* id_list = new Node(SymbolClass::ID_LIST);
-
 				id_list->append_child(new Node(SymbolClass::ID));
-
-				$$ = id_list;
 			} else {
-				// printf("Processing id_list rule (single ID)\n");
-				$$->append_child(new Node(SymbolClass::ID, $1));
+				id_list->append_child(new Node(SymbolClass::ID, $1));
 			}
+
+			$$ = id_list;
 		}
 		| id_list T_COMMA T_ID
 		{
 			// printf("Processing id_list rule (additional ID)\n");
 
-			if (cst_only == 1) {
-				Node* id_list = new Node(SymbolClass::ID_LIST);
+			Node* id_list = new Node(SymbolClass::ID_LIST);
 
+			if (cst_only == 1) {
 				id_list->append_child(new Node(SymbolClass::ID));
 				id_list->append_child(new Node(SymbolClass::COMMA));
 				id_list->append_child($1);
-
-				$$ = id_list;
 			} else {
-				// printf("Processing id_list rule (additional ID)\n");
-				// TODO: Modify the node logic
-				$$->append_child(new Node(SymbolClass::ID, $3));
+				if ($1->children.size()) {
+					id_list->children = $1->children;
+					id_list->append_child(new Node(SymbolClass::ID, $3));
+				} else {
+					Node* id_list = new Node(SymbolClass::ID_LIST);
 
-				$$ = $1;
+					id_list->append_child($1);
+					id_list->append_child(new Node(SymbolClass::ID, $3));
+				}
 			}
+
+			$$ = id_list;
 		}
 		;
 
@@ -256,7 +263,6 @@ expr_list 	: expression
 
 					$$ = expr_list;
 				} else {
-					// printf("Processing expr_list rule (single expression)\n");
 					$$ = $1;
 				}
 			}
@@ -273,10 +279,18 @@ expr_list 	: expression
 
 					$$ = expr_list;
 				} else {
-					// printf("Processing expr_list rule (additional expression)\n");
-					$1->append_child($3);
+					if ($1->children.size()) {
+						$1->append_child($3);
 
-					$$ = $1;
+						$$ = $1;
+					} else {
+						Node* expr_list = new Node(SymbolClass::EXPRESSION_LIST);
+
+						expr_list->append_child($1);
+						expr_list->append_child($3);
+
+						$$ = expr_list;
+					}
 				}
 		  	}
 		  	;
@@ -292,7 +306,6 @@ expression 	: primary
 
 					$$ = expression;
 				} else {
-					// printf("Processing expression rule (primary)\n");
 					$$ = $1;
 				}
 			}
@@ -309,7 +322,6 @@ expression 	: primary
 
 					$$ = expression;
 				} else {
-					// printf("Processing plus expression rule (expression + primary)\n");
 					Node* plusop = new Node(SymbolClass::PLUSOP, $2);
 
 					plusop->append_child($1);
@@ -331,7 +343,6 @@ expression 	: primary
 
 					$$ = expression;
 				} else {
-					// printf("Processing minus expression rule (expression + primary)\n");
 					Node* minusop = new Node(SymbolClass::MINUSOP, $2);
 
 					minusop->append_child($1);
@@ -355,7 +366,6 @@ primary : T_LPAREN expression T_RPAREN
 
 				$$ = primary;
 			} else {
-				// printf("Processing primary rule (parenthesized expression)\n");
 				$$ = $2;
 			}
 		}
@@ -370,7 +380,6 @@ primary : T_LPAREN expression T_RPAREN
 
 				$$ = primary;
 			} else {
-				// printf("Processing primary rule (ID)\n");
 				$$ = new Node(SymbolClass::ID, $1);
 			}
 		}
@@ -385,7 +394,6 @@ primary : T_LPAREN expression T_RPAREN
 
 				$$ = primary;
 			} else {
-				// printf("Processing primary rule (integer literal)\n");
 				char intstr[11];
 				sprintf(intstr, "%d", $1);
 
