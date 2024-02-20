@@ -46,6 +46,14 @@ private:
     void gen_llvm_ir(Node* node);
 
     /* Add any function you want here */
+    void gen_assignop_llvm_ir(Node* node);
+    void gen_read_llvm_ir(Node* node);
+    void gen_write_llvm_ir(Node* node);
+
+    std::string gen_operation_llvm_ir(Node* node);
+    std::string gen_expression_llvm_ir(Node* node);
+
+    std::string get_operation_value(Node* node);
 
 private:
     std::ofstream &out;

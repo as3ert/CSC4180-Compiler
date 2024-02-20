@@ -39,15 +39,15 @@ Node* root_node = nullptr;
 Node* temp = nullptr;
 %}
 
-/* TODO: define yylval data types with %union */
+/* Define yylval data types with %union */
 %union {
-	/* data */
+	/* Data */
 	int intval;
 	const char* strval;
 	struct Node* nodeval;
 };
 
-/* TODO: define terminal symbols with %token. Remember to set the type. */
+/* Define terminal symbols with %token. Remember to set the type. */
 %token <intval> T_INTLITERAL
 %token <strval> T_BEGIN_ T_END T_READ T_WRITE T_LPAREN T_RPAREN T_SEMICOLON 
 %token <strval> T_COMMA T_ASSIGNOP T_PLUSOP T_MINUSOP T_SCANEOF T_ID
@@ -55,7 +55,7 @@ Node* temp = nullptr;
 /* Start Symbol */
 %start start
 
-/* TODO: define Non-Terminal Symbols with %type. Remember to set the type. */
+/* Define Non-Terminal Symbols with %type. Remember to set the type. */
 %type <nodeval> program statement_list statement id_list expr_list expression primary
 
 %%
@@ -67,7 +67,7 @@ Node* temp = nullptr;
  *                  ;
  */
 
-/* TODO: your production rule here */
+/* Production rule */
 /* The tree generation logic should be in the operation block of each production rule */
 start 	: program T_SCANEOF 
 	  	{
@@ -174,7 +174,6 @@ statement 	: T_ID T_ASSIGNOP expression T_SEMICOLON
 				} else {
 					Node* read = new Node(SymbolClass::READ, $1);
 
-					// if ($3->children.size() && !$3->should_preserver_in_ast()) {
 					if ($3->children.size()) {
 						read->children = $3->children;
 					} else {
