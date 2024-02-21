@@ -54,20 +54,20 @@ INTLITERAL  -?[0-9]+
 {EOLN}          { /* Ignore newlines */ }
 {TAB}           { /* Ignore tabs */ }
 {COMMENT}       { /* Ignore comments */ }
-{BEGIN_}        { printf("<BEGIN_, %s>\n", yytext); yylval.strval = strdup(yytext); return T_BEGIN_; }
-{END}           { printf("<END, %s>\n", yytext); yylval.strval = strdup(yytext); return T_END; }
-{READ}          { printf("<READ, %s>\n", yytext); yylval.strval = strdup(yytext); return T_READ; }
-{WRITE}         { printf("<WRITE, %s>\n", yytext); yylval.strval = strdup(yytext); return T_WRITE; }
-{LPAREN}        { printf("<LPAREN, %s>\n", yytext); yylval.strval = strdup(yytext); return T_LPAREN; }
-{RPAREN}        { printf("<RPAREN, %s>\n", yytext); yylval.strval = strdup(yytext); return T_RPAREN; }
-{SEMICOLON}     { printf("<SEMICOLON, %s>\n", yytext); yylval.strval = strdup(yytext); return T_SEMICOLON; }
-{COMMA}         { printf("<COMMA, %s>\n", yytext); yylval.strval = strdup(yytext); return T_COMMA; }
-{ASSIGNOP}      { printf("<ASSIGNOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_ASSIGNOP; }
-{PLUSOP}        { printf("<PLUSOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_PLUSOP; }
-{MINUSOP}       { printf("<MINUSOP, %s>\n", yytext); yylval.strval = strdup(yytext); return T_MINUSOP; }
-{ID}            { printf("<ID, %s>\n", yytext); yylval.strval = strdup(yytext); return T_ID; }
-{INTLITERAL}    { printf("<INTLITERAL, %s>\n", yytext); yylval.intval = std::atoi(yytext); return T_INTLITERAL; }
-<<EOF>>         { printf("<SCANEOF>\n"); return T_SCANEOF; }
+{BEGIN_}        { if(scan_only == 1) { printf("<BEGIN_, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_BEGIN_; }
+{END}           { if(scan_only == 1) { printf("<END, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_END; }
+{READ}          { if(scan_only == 1) { printf("<READ, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_READ; }
+{WRITE}         { if(scan_only == 1) { printf("<WRITE, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_WRITE; }
+{LPAREN}        { if(scan_only == 1) { printf("<LPAREN, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_LPAREN; }
+{RPAREN}        { if(scan_only == 1) { printf("<RPAREN, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_RPAREN; }
+{SEMICOLON}     { if(scan_only == 1) { printf("<SEMICOLON, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_SEMICOLON; }
+{COMMA}         { if(scan_only == 1) { printf("<COMMA, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_COMMA; }
+{ASSIGNOP}      { if(scan_only == 1) { printf("<ASSIGNOP, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_ASSIGNOP; }
+{PLUSOP}        { if(scan_only == 1) { printf("<PLUSOP, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_PLUSOP; }
+{MINUSOP}       { if(scan_only == 1) { printf("<MINUSOP, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_MINUSOP; }
+{ID}            { if(scan_only == 1) { printf("<ID, %s>\n", yytext); } yylval.strval = strdup(yytext); return T_ID; }
+{INTLITERAL}    { if(scan_only == 1) { printf("<INTLITERAL, %s>\n", yytext); } yylval.intval = std::atoi(yytext); return T_INTLITERAL; }
+<<EOF>>         { if(scan_only == 1) { printf("<SCANEOF>\n"); return 0; } return T_SCANEOF; }
 
 .
 

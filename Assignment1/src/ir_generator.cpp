@@ -17,6 +17,7 @@
 std::unordered_map<std::string, int> ID_lookup_table;
 std::unordered_map<std::string, int>::iterator it;
 int temp_counter = 0;
+int variable_counter = 0;
 
 void IR_Generator::export_ast_to_llvm_ir(Node* node) {
     if (!node) {
@@ -81,14 +82,10 @@ void IR_Generator::gen_assignop_llvm_ir(Node* node) {
 
     switch (symbol_class) {
         case SymbolClass::ID:
-            // rvalue = gen_expression_llvm_ir(node->children[1]);
-            // break;
         case SymbolClass::INTLITERAL:
             rvalue = gen_expression_llvm_ir(node->children[1]);
             break;
         case SymbolClass::PLUSOP:
-            // rvalue = gen_operation_llvm_ir(node->children[1]);
-            // break;
         case SymbolClass::MINUSOP:
             rvalue = gen_operation_llvm_ir(node->children[1]);
             break;
@@ -116,10 +113,6 @@ void IR_Generator::gen_assignop_llvm_ir(Node* node) {
  *          call i32 (i8*, ...) @scanf(i8* %_sacnf_str_1, i32* %<variable>)
  */
 void IR_Generator::gen_read_llvm_ir(Node* node) {
-    int variable_num = node->children.size();
-    std::string i8_string = std::to_string(variable_num) + " x i8";
-
-    // TODO: Fix count and d_string problem
     std::string variable_list = "";
     std::string d_string = "";
     for (auto &child : node->children) {
@@ -133,6 +126,9 @@ void IR_Generator::gen_read_llvm_ir(Node* node) {
         d_string += "%d ";
     }
     d_string = std::string(d_string.begin(), d_string.end() - 1);
+
+    int i8_num = d_string.length() + 1;
+    std::string i8_string = std::to_string(i8_num) + " x i8";
 
     out << "\t%_scanf_format_1 = alloca [" << i8_string << "]" << std::endl;
     out << "\tstore [" << i8_string << "] c\"" << d_string << "\\00\", [" << i8_string << "]* %_scanf_format_1" << std::endl;
@@ -150,24 +146,16 @@ void IR_Generator::gen_read_llvm_ir(Node* node) {
  */
 void IR_Generator::gen_write_llvm_ir(Node* node) {
     // TODO: Fix count and d_string problem in test 3
-    int variable_num = 0;
-    Node* temp_node = node;
-    // Poor counting logic
-    variable_num = temp_node->children.size();
-    // for (auto &child : temp_node->children) {
-    //     if (child->symbol_class == SymbolClass::ID) {
-    //         variable_num ++;
-    //     }
-        
-    // }
-
-    std::string i8_string = std::to_string(variable_num) + " x i8";
+    int variable_num = node->children.size();
 
     std::string d_string = "";
     for (int i = 0; i < variable_num; i++) {
         d_string += "%d ";
     }
     d_string = std::string(d_string.begin(), d_string.end() - 1);
+
+    int i8_num = d_string.length() + 2;
+    std::string i8_string = std::to_string(i8_num) + " x i8";
 
     out << "\t%_printf_format_1 = alloca [" << i8_string << "]" << std::endl;
     out << "\tstore [" << i8_string << "] c\"" << d_string << "\\0A\\00\", [" << i8_string << "]* %_printf_format_1" << std::endl;

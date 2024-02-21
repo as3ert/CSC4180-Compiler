@@ -119,7 +119,7 @@ void write_parse_tree(std::ofstream& out, Node* node, int& counter, bool export_
 }
 
 void export_parse_tree_to_dot(Node* root, const std::string& filename, bool export_lexeme) {
-    std::cout << "export parse tree filename: " << filename << "\n";
+    // std::cout << "export parse tree filename: " << filename << "\n";
     std::ofstream out(filename);
     out << "digraph AST {\n";
     int counter = 0;

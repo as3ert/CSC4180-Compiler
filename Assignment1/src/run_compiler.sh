@@ -2,27 +2,34 @@
 
 make all
 
+cd ..
+
 mkdir -p ./testcases && cd testcases
-mkdir -p ./tokens
+
+rm -rf ./ast
+rm -rf ./cst
+rm -rf ./llvm_ir
+rm -rf ./riscv_assembly
+rm -rf ./executable
+
 mkdir -p ./ast
 mkdir -p ./cst
 mkdir -p ./llvm_ir
 mkdir -p ./riscv_assembly
 mkdir -p ./executable
-mkdir -p ./input
-mkdir -p ./output
 
-for test_idx in {0..9}; do
+for test_idx in $(seq 0 9); do
     test="test$test_idx"
     test_program="./test$test_idx.m"
-    echo "$test"
-    # tokens
-    ../compiler -s $test_program > ./tokens/${test}.txt
+    rm ./output/${test}-local.txt
+
+    # scan only
+    ../src/compiler -s $test_program
     # concrete syntax tree (cst)
-    ../compiler -c -d ./cst/${test}.dot $test_program
+    ../src/compiler -c -d ./cst/${test}.dot $test_program
     dot -Tpng ./cst/${test}.dot -o ./cst/${test}.png
     # abstract syntax tree (ast) & LLVM IR
-    ../compiler -d ./ast/${test}.dot -o ./llvm_ir/${test}.ll $test_program
+    ../src/compiler -d ./ast/${test}.dot -o ./llvm_ir/${test}.ll $test_program
     dot -Tpng ./ast/${test}.dot -o ./ast/${test}.png
     # optimization
     opt ./llvm_ir/${test}.ll -S --O3 -o ./llvm_ir/${test}_opt.ll
