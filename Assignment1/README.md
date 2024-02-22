@@ -31,15 +31,11 @@ Allowed options: :
 ## Sample: test0.m
 
 ```bash
-118010200@c2d52c9b1339:~/A1$ ./compiler ./testcases/test0.m
-dot file name: ast.dot
-IR output: program.ll
-Source program: ./testcases/test0.m
-export parse tree filename: ast.dot
-118010200@c2d52c9b1339:~/A1$ dot -Tpng ./ast.dot -o ./ast.png
-118010200@c2d52c9b1339:~/A1$ opt ./program.ll -S --O3 -o ./program_optimized.ll
-118010200@c2d52c9b1339:~/A1$ llc -march=riscv64 ./program_optimized.ll -o ./program.s
-118010200@c2d52c9b1339:~/A1$ riscv64-unknown-linux-gnu-gcc ./program.s -o ./program
-118010200@c2d52c9b1339:~/A1$ qemu-riscv64 -L /opt/riscv/sysroot ./program
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ ./compiler ../testcases/test0.m
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ dot -Tpng ./ast.dot -o ./ast.png
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ opt ./program.ll -S --O3 -o ./program_optimized.ll
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ llc -march=riscv64 ./program_optimized.ll -o ./program.s
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ riscv64-unknown-linux-gnu-gcc ./program.s -o ./program
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ qemu-riscv64 -L /opt/riscv/sysroot ./program
 30
 ```
