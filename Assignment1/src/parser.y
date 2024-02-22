@@ -10,6 +10,7 @@
  * 				based on the grammar tree.
  */
 
+
 %code requires {
 #include "node.hpp"
 }
