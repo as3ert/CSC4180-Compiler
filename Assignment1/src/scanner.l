@@ -1,15 +1,12 @@
-/**
- * --------------------------------------
- * CUHK-SZ CSC4180: Compiler Construction
- * Assignment 1: Micro Language Compiler
- * --------------------------------------
- * Author: Mr.Liu Yuxuan
- * Position: Teaching Assisant
- * Date: January 25th, 2024
- * Email: yuxuanliu1@link.cuhk.edu.cn
+/*
+ * Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
  * 
- * This file implements some lexical analysis rules to scan the input file 
- * and return the tokens which will be used for parser 
+ * File Created: 19th February 2024
+ * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+ * Student ID: 120090244
+ * 
+ * Description: This file implements some lexical analysis rules to scan the input file 
+ *              and return the tokens which will be used for parser.
  */
 
 %{

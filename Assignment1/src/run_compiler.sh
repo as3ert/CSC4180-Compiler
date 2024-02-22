@@ -24,7 +24,7 @@ for test_idx in $(seq 0 9); do
     rm ./output/${test}-local.txt
 
     # scan only
-    ../src/compiler -s $test_program
+    # ../src/compiler -s $test_program
     # concrete syntax tree (cst)
     ../src/compiler -c -d ./cst/${test}.dot $test_program
     dot -Tpng ./cst/${test}.dot -o ./cst/${test}.png

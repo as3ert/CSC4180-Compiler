@@ -1,21 +1,21 @@
-/**
- * --------------------------------------
- * CUHK-SZ CSC4180: Compiler Construction
- * Assignment 1: Micro Language Compiler
- * --------------------------------------
- * Author: Mr.Liu Yuxuan
- * Position: Teaching Assisant
- * Date: January 25th, 2024
- * Email: yuxuanliu1@link.cuhk.edu.cn
+/*
+ * Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
  * 
- * This file defines the LLVM IR Generator class, which generate LLVM IR (.ll) file given the AST from parser.
+ * File Created: 19th February 2024
+ * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+ * Student ID: 120090244
+ * 
+ * Description: This file defines the LLVM IR Generator class, which generate LLVM IR (.ll) 
+ *              file given the AST from parser.
  */
+
 
 #include "ir_generator.hpp"
 #include <unordered_map>
 
 std::unordered_map<std::string, int> ID_lookup_table;
 std::unordered_map<std::string, int>::iterator it;
+
 int temp_counter = 0;
 int variable_counter = 0;
 
@@ -47,6 +47,7 @@ void IR_Generator::gen_llvm_ir(Node* node) {
         return;
     } 
     
+    // Different logic for different symbol classes
     switch (node->symbol_class) {
         case SymbolClass::ASSIGNOP:
             gen_assignop_llvm_ir(node);
@@ -70,7 +71,7 @@ void IR_Generator::gen_llvm_ir(Node* node) {
 }
 
 /*
- * TODO: Implement assignop_llvm_ir
+ * Implement assignop_llvm_ir
  *
  * Example: %<variable> = alloca i32
  *          store i32 <rvalue>, i32* %<variable>
@@ -94,7 +95,7 @@ void IR_Generator::gen_assignop_llvm_ir(Node* node) {
             break;
     }
 
-    // Check whether the variable is already in the lookup table
+    // If the variable is not in the lookup table, insert it
     it = ID_lookup_table.find(variable);
     if (it == ID_lookup_table.end()) {
         ID_lookup_table.insert({variable, 1});
@@ -104,7 +105,7 @@ void IR_Generator::gen_assignop_llvm_ir(Node* node) {
 }
 
 /* 
- * TODO: Implement read_llvm_ir
+ * Implement read_llvm_ir
  *
  * Example: %<variable> = alloca i32
  *          %_scanf_format_1 = alloca [# x i8]
@@ -137,7 +138,7 @@ void IR_Generator::gen_read_llvm_ir(Node* node) {
 }
 
 /* 
- * TODO: Implement write_llvm_ir
+ * Implement write_llvm_ir
  *
  * Example: %_printf_format_1 = alloca [# x i8]
  *          store [# x i8] c"%d ... %d\0A\00", [# x i8]* %_printf_format_1
@@ -145,7 +146,6 @@ void IR_Generator::gen_read_llvm_ir(Node* node) {
  *          call i32 (i8*, ...) @printf(i8* %_printf_str_1, i32 <rvalue>)
  */
 void IR_Generator::gen_write_llvm_ir(Node* node) {
-    // TODO: Fix count and d_string problem in test 3
     int variable_num = node->children.size();
 
     std::string d_string = "";
@@ -186,7 +186,7 @@ std::string IR_Generator::get_operation_value(Node* node) {
 }
 
 /* 
- * TODO: Implement gen_operation_llvm_ir
+ * Implement gen_operation_llvm_ir
  *
  * Example: %_tmp_1 = load i32, i32* %<variable>
  *          %_tmp_2 = sub i32 <expression>, %_tmp_1
@@ -220,7 +220,7 @@ std::string IR_Generator::gen_operation_llvm_ir(Node* node) {
 }
 
 /*
- * TODO: Implement gen_expression_llvm_ir
+ * Implement gen_expression_llvm_ir
  *
  * Example: %_tmp_1 = load i32, i32* %<variable>
  */
