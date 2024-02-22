@@ -10,7 +10,7 @@ Refer to the [Instruction PDF](./CSC4180-A1-Instruction.pdf)
 cd /path/to/project
 make all
 
-118010200@c2d52c9b1339:~/A1$ ./compiler --help
+120090244@c2d52c9b1339:~/CSC4180-Compiler/Assignment1/src$ ./compiler --help
 CUHK-SZ CSC4180 Assignment-1: Micro Language Compiler Frontend
 Usage: Usage: compiler [options] source-program.m
 Allowed options: :
