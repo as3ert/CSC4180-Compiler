@@ -32,9 +32,9 @@ int main(int argc, char const *argv[]) {
     po::options_description desc(
 R"(CUHK-SZ CSC4180 Assignment-1: Micro Language Compiler Frontend
 Usage: Usage: compiler [options] source-program.m
-Allowed options: )");
+Allowed options)");
     desc.add_options()
-        ("help,h", R"(Usage: Usage: compiler [options] source-program.m)")
+        ("help,h", R"(Usage: compiler [options] source-program.m)")
         ("scan-only,s",
             "[Default: false] print out token class and lexeme pairs for each token, no parsing operations onwards")
         ("cst-only,c",

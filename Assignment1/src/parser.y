@@ -33,7 +33,6 @@ int yylex();
 extern int cst_only;
 
 Node* root_node = nullptr;
-Node* temp = nullptr;
 %}
 
 /* Define yylval data types with %union */
@@ -44,7 +43,7 @@ Node* temp = nullptr;
 	struct Node* nodeval;
 };
 
-/* Define terminal symbols with %token. Remember to set the type. */
+/* Define terminal symbols with %token. */
 %token <intval> T_INTLITERAL
 %token <strval> T_BEGIN_ T_END T_READ T_WRITE T_LPAREN T_RPAREN T_SEMICOLON 
 %token <strval> T_COMMA T_ASSIGNOP T_PLUSOP T_MINUSOP T_SCANEOF T_ID
@@ -52,7 +51,7 @@ Node* temp = nullptr;
 /* Start Symbol */
 %start start
 
-/* Define Non-Terminal Symbols with %type. Remember to set the type. */
+/* Define Non-Terminal Symbols with %type. */
 %type <nodeval> program statement_list statement id_list expr_list expression primary
 
 %%
