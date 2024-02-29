@@ -15,6 +15,8 @@ project
 |-
 |--- README.md
 |-
+|--- CSC4180-A1-Instruction.pdf
+|-
 |--- testcases
 |-
 |--- src
@@ -26,6 +28,7 @@ project
 		|--- node.cpp
 		|--- node.hpp
 		|--- parser.y
+		|--- run_compiler.sh
 		|--- scanner.l
 ```
 
