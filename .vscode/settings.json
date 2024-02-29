@@ -1,6 +1,6 @@
 {
     "files.associations": {
         "*.json": "jsonc",
-        "*.l": "cpp"
+        "*.l": "lex"
     }
 }
