@@ -1,17 +1,12 @@
-/**
- * --------------------------------------
- * CUHK-SZ CSC4180: Compiler Construction
- * Assignment 2: Oat v.1 Scanner
- * --------------------------------------
- * Author: Mr.Liu Yuxuan
- * Position: Teaching Assisant
- * Date: February 27th, 2024
- * Email: yuxuanliu1@link.cuhk.edu.cn
+/*
+ * Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
  * 
- * File: lexer.l
- * -----------------------------
- * This file implements some lexical analysis rules to scan the input file 
- * and return the tokens which will be used later for parser
+ * File Created: 28th February 2024
+ * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+ * Student ID: 120090244
+ * 
+ * Description: This file implements some lexical analysis rules to scan the input file 
+ *              and return the tokens which will be used later for parser.
  */
 
 %{
