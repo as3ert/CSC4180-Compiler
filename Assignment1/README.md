@@ -6,6 +6,8 @@
 
 **Date:** Feb 22nd, 2024
 
+**Final Grade:** 100
+
 ---
 
 ## Code Structure
