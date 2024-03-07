@@ -179,7 +179,7 @@ void NFA::kleene_star() {
  * @return DFA
  */
 DFA* NFA::to_DFA() {
-    // TODO
+    // TODO:
 }
 
 /**
@@ -189,7 +189,7 @@ DFA* NFA::to_DFA() {
  * @return {set<State&>} The closure of state
  */
 std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
-    // TODO
+    // TODO:
 }
 
 /**
@@ -199,7 +199,7 @@ std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
  * @return
  */
 std::set<NFA::State*> NFA::move(std::set<NFA::State*> closure, char c) {
-    // TODO
+    // TODO:
 }
 
 void NFA::print() {
@@ -251,7 +251,7 @@ Scanner::Scanner() {
  * @return 0 for success, -1 for failure
  */ 
 int Scanner::scan(std::string &filename) {
-    // TODO
+    // TODO:
     return 0;
 }
 
@@ -264,7 +264,7 @@ int Scanner::scan(std::string &filename) {
  */
 void Scanner::add_token(std::string token_str, TokenClass token_class, unsigned int precedence) {
     auto keyword_nfa = NFA::from_string(token_str);
-    
+
     keyword_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(keyword_nfa);
 }

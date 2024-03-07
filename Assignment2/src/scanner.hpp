@@ -40,7 +40,7 @@ public:
         static unsigned int increment_id;
 
         State() : id(increment_id++) {
-            // TODO
+            // TODO:
         }
 
         bool operator==(const State& other) const {
