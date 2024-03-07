@@ -1,17 +1,12 @@
-/**
- * --------------------------------------
- * CUHK-SZ CSC4180: Compiler Construction
- * Assignment 2: Oat v.1 Scanner
- * --------------------------------------
- * Author: Mr.Liu Yuxuan
- * Position: Teaching Assisant
- * Date: February 27th, 2024
- * Email: yuxuanliu1@link.cuhk.edu.cn
+/*
+ * Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
  * 
- * File: scanner.hpp
- * ---------------------------------------------------------------------
- * This file defines the data structure of DFA, NFA, Scanner, and necessary
- * functions for scanning
+ * File Created: 29th February 2024
+ * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+ * Student ID: 120090244
+ * 
+ * Description: This file defines the data structure of DFA, NFA, 
+ *              Scanner, and necessary functions for scanning.
  */
 
 #ifndef SCANNER_HPP

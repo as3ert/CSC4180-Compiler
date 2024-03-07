@@ -1,16 +1,11 @@
-/**
- * --------------------------------------
- * CUHK-SZ CSC4180: Compiler Construction
- * Assignment 2: Oat v.1 Scanner
- * --------------------------------------
- * Author: Mr.Liu Yuxuan
- * Position: Teaching Assisant
- * Date: February 27th, 2024
- * Email: yuxuanliu1@link.cuhk.edu.cn
+/*
+ * Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
  * 
- * File: scanner.cpp
- * ------------------------------------------------------------
- * This file implements scanner function defined in scanner.hpp
+ * File Created: 7th March 2024
+ * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+ * Student ID: 120090244
+ * 
+ * Description: This file implements scanner function defined in scanner.hpp.
  */
 
 #include "scanner.hpp"
@@ -65,7 +60,14 @@ NFA::~NFA() {
  * @return
  */
 NFA* NFA::from_string(std::string str) {
-    // TODO
+    NFA* string_nfa = new NFA();
+
+    for (auto c : str) {
+        NFA* char_nfa = new NFA(c);
+        string_nfa->concat(char_nfa);
+    }
+
+    return string_nfa;
 }
 
 /**
@@ -73,7 +75,18 @@ NFA* NFA::from_string(std::string str) {
  * @return
  */
 NFA* NFA::from_letter() {
-    // TODO
+    NFA* letter_nfa = new NFA();
+
+    for (char c = 'a'; c <= 'z'; c++) {
+        NFA* char_nfa = new NFA(c);
+        letter_nfa->set_union(char_nfa);
+    }
+    for (char c = 'A'; c <= 'Z'; c++) {
+        NFA* char_nfa = new NFA(c);
+        letter_nfa->set_union(char_nfa);
+    }
+
+    return letter_nfa;
 }
 
 /**
@@ -81,22 +94,38 @@ NFA* NFA::from_letter() {
  * @return
  */
 NFA* NFA::from_digit() {
-    // TODO
+    NFA* integer_nfa = new NFA();
+
+    for (char c = '0'; c <= '9'; c++) {
+        NFA* char_nfa = new NFA(c);
+        integer_nfa->set_union(char_nfa);
+    }
+
+    return integer_nfa;
 }
 
 /**
  * NFA for any char (ASCII 0-127)
  */
 NFA* NFA::from_any_char() {
-    // TODO
+    NFA* any_char_nfa = new NFA();
+
+    for (char c = 0; c <= 127; c++) {
+        NFA* char_nfa = new NFA(c);
+        any_char_nfa->set_union(char_nfa);
+    }
+
+    return any_char_nfa;
 }
+
 /**
  * Concatanat two NFAs
  * @param from: NFA pointer to be concated after the current NFA
  * @return: this -> from
  */
 void NFA::concat(NFA* from) {
-    // TODO
+    end->transition[EPSILON] = {from->start};
+    end = from->end;
 }
 
 /**
@@ -104,21 +133,45 @@ void NFA::concat(NFA* from) {
  * @param
  */
 void NFA::set_union(NFA* from) {
-    // TODO
+    State* new_start = new State();
+    State* new_end = new State();
+
+    new_start->transition[EPSILON] = {start, from->start};
+    end->transition[EPSILON] = {new_end};
+    from->end->transition[EPSILON] = {new_end};
+
+    start = new_start;
+    end = new_end;
 }
 
 /**
  * Set Union with a set of NFAs
  */
 void NFA::set_union(std::set<NFA*> set) {
-    // TODO
+    State* new_start = new State();
+    State* new_end = new State();
+
+    for (auto nfa : set) {
+        new_start->transition[EPSILON] = {nfa->start};
+        nfa->end->transition[EPSILON] = {new_end};
+    }
+
+    start = new_start;
+    end = new_end;
 }
 
 /**
  * Kleene Star Operation
  */
 void NFA::kleene_star() {
-    // TODO
+    State* new_start = new State();
+    State* new_end = new State();
+
+    new_start->transition[EPSILON] = {start, new_end};
+    end->transition[EPSILON] = {new_start, new_end};
+
+    start = new_start;
+    end = new_end;
 }
 
 /**
@@ -211,6 +264,7 @@ int Scanner::scan(std::string &filename) {
  */
 void Scanner::add_token(std::string token_str, TokenClass token_class, unsigned int precedence) {
     auto keyword_nfa = NFA::from_string(token_str);
+    
     keyword_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(keyword_nfa);
 }
@@ -223,19 +277,50 @@ void Scanner::add_token(std::string token_str, TokenClass token_class, unsigned 
  * @return
  */
 void Scanner::add_identifier_token(TokenClass token_class, unsigned int precedence) {
-    // TODO: mimic how add_token do
+    auto letter_nfa = NFA::from_letter();
+    auto integer_nfa = NFA::from_digit();
+    auto underscore_nfa = new NFA('_');
+
+    auto id_nfa = new NFA();
+    id_nfa->set_union(letter_nfa);
+
+    auto temp_nfa = new NFA();
+    temp_nfa->set_union(letter_nfa);
+    temp_nfa->set_union(integer_nfa);
+    temp_nfa->set_union(underscore_nfa);
+    temp_nfa->kleene_star();
+
+    id_nfa->concat(temp_nfa);
+
+    id_nfa->set_token_class_for_end_state(token_class, precedence);
+    nfa->set_union(id_nfa);
+
+    delete letter_nfa;
+    delete integer_nfa;
+    delete underscore_nfa;
 }
 
 /**
  * Token: INTEGER
  * RegExp: [1-9][0-9]+
+ * RegExp: [0-9]+
  * Negative integer is recognized by unary operator MINUS
  * @param token_class
  * @param precedence
  * @return
  */
 void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence) {
-    // TODO: mimic how add_token do
+    auto integer_nfa = NFA::from_digit();
+
+    auto temp_nfa = NFA::from_digit();
+    temp_nfa->kleene_star();
+
+    integer_nfa->concat(temp_nfa);
+
+    integer_nfa->set_token_class_for_end_state(token_class, precedence);
+    nfa->set_union(integer_nfa);
+
+    delete temp_nfa;
 }
 
 /**
@@ -246,16 +331,49 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
  * @return
  */
 void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) {
-    // TODO: mimic how add_token do
+    auto string_nfa = new NFA('"');
+    auto quote_nfa = new NFA('"');
+
+    auto temp_nfa = NFA::from_any_char();
+    temp_nfa->set_union(quote_nfa);
+    temp_nfa->kleene_star();
+
+    string_nfa->concat(temp_nfa);
+    string_nfa->concat(quote_nfa);
+
+    string_nfa->set_token_class_for_end_state(token_class, precedence);
+    nfa->set_union(string_nfa);
+
+    delete quote_nfa;
+    delete temp_nfa;
 }
 
 /**
  * Token Class: COMMENT
- * RegExp: //\s(.)*
+ * RegExp: /*(.)** /
  * @param token_class
  * @param precedence
  * @return
  */
 void Scanner::add_comment_token(TokenClass token_class, unsigned int precedence) {
-    // TODO: mimic how add_token do
+    auto slash_nfa = new NFA('/');
+    auto star_nfa = new NFA('*');
+
+    auto comment_nfa = new NFA();
+    comment_nfa->concat(slash_nfa);
+    comment_nfa->concat(star_nfa);
+
+    auto temp_nfa = NFA::from_any_char();
+    temp_nfa->kleene_star();
+
+    comment_nfa->concat(temp_nfa);
+    comment_nfa->concat(star_nfa);
+    comment_nfa->concat(slash_nfa);
+
+    comment_nfa->set_token_class_for_end_state(token_class, precedence);
+    nfa->set_union(comment_nfa);
+
+    delete slash_nfa;
+    delete star_nfa;
+    delete temp_nfa;
 }
