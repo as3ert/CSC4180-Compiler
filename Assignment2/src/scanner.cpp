@@ -9,6 +9,7 @@
  */
 
 #include "scanner.hpp"
+#include <stack>
 
 DFA::~DFA() {
     for (auto state : states) {
@@ -77,11 +78,11 @@ NFA* NFA::from_string(std::string str) {
 NFA* NFA::from_letter() {
     NFA* letter_nfa = new NFA();
 
-    for (char c = 'a'; c <= 'z'; c++) {
+    for (char c = 'a'; c <= 'z'; c ++) {
         NFA* char_nfa = new NFA(c);
         letter_nfa->set_union(char_nfa);
     }
-    for (char c = 'A'; c <= 'Z'; c++) {
+    for (char c = 'A'; c <= 'Z'; c ++) {
         NFA* char_nfa = new NFA(c);
         letter_nfa->set_union(char_nfa);
     }
@@ -96,7 +97,7 @@ NFA* NFA::from_letter() {
 NFA* NFA::from_digit() {
     NFA* integer_nfa = new NFA();
 
-    for (char c = '0'; c <= '9'; c++) {
+    for (char c = '0'; c <= '9'; c ++) {
         NFA* char_nfa = new NFA(c);
         integer_nfa->set_union(char_nfa);
     }
@@ -110,7 +111,8 @@ NFA* NFA::from_digit() {
 NFA* NFA::from_any_char() {
     NFA* any_char_nfa = new NFA();
 
-    for (char c = 0; c <= 127; c++) {
+    // Overflow control
+    for (unsigned char c = 0; c <= 127; c ++) {
         NFA* char_nfa = new NFA(c);
         any_char_nfa->set_union(char_nfa);
     }
@@ -133,6 +135,7 @@ void NFA::concat(NFA* from) {
  * @param
  */
 void NFA::set_union(NFA* from) {
+    // TODO: Core dumped
     State* new_start = new State();
     State* new_end = new State();
 
@@ -179,7 +182,44 @@ void NFA::kleene_star() {
  * @return DFA
  */
 DFA* NFA::to_DFA() {
-    // TODO:
+    DFA* dfa = new DFA();
+    DFA::State* dfa_start = new DFA::State();
+    dfa_start->id = dfa->states.size();
+
+    std::set<NFA::State*> start_closure = epsilon_closure(start);
+    std::map<std::set<NFA::State*>, DFA::State*> state_map;
+    state_map[start_closure] = dfa_start;
+
+    std::stack<std::set<NFA::State*>> stack;
+    stack.push(start_closure);
+
+    while (!stack.empty()) {
+        std::set<NFA::State*> closure = stack.top();
+        stack.pop();
+
+        DFA::State* dfa_state = state_map[closure];
+
+        for (char c = 0; c <= 127; c ++) {
+            std::set<NFA::State*> next_closure = move(closure, c);
+            for (auto state : next_closure) {
+                std::set<NFA::State*> temp_closure = epsilon_closure(state);
+                next_closure.insert(temp_closure.begin(), temp_closure.end());
+            }
+
+            if (next_closure.empty()) {
+                continue;
+            }
+
+            if (state_map.find(next_closure) == state_map.end()) {
+                DFA::State* next_dfa_state = new DFA::State();
+                next_dfa_state->id = dfa->states.size();
+                state_map[next_closure] = next_dfa_state;
+                stack.push(next_closure);
+            }
+
+            dfa_state->transition[c] = state_map[next_closure];
+        }
+    }
 }
 
 /**
@@ -189,17 +229,42 @@ DFA* NFA::to_DFA() {
  * @return {set<State&>} The closure of state
  */
 std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
-    // TODO:
+    std::set<NFA::State*> closure;
+
+    std::stack<NFA::State*> stack;
+    stack.push(state);
+
+    while (!stack.empty()) {
+        NFA::State* state = stack.top();
+        stack.pop();
+
+        closure.insert(state);
+        for (auto neighbor : state->transition[EPSILON]) {
+            if (closure.find(neighbor) == closure.end()) {
+                stack.push(neighbor);
+            }
+        }
+    }
+
+    return closure;
 }
 
 /**
  * Get the set of neighbor states from the closure of starting state through char c
  * @param closure
  * @param c
- * @return
+ * @return {set<State&>} The set of neighbor states
  */
 std::set<NFA::State*> NFA::move(std::set<NFA::State*> closure, char c) {
-    // TODO:
+    std::set<NFA::State*> next_closure;
+
+    for (auto state : closure) {
+        for (auto neighbor : state->transition[c]) {
+            next_closure.insert(neighbor);
+        }
+    }
+
+    return next_closure;
 }
 
 void NFA::print() {
@@ -214,16 +279,16 @@ void NFA::print() {
 std::vector<NFA::State*> NFA::iter_states() {
     std::vector<State*> states{};
     states.emplace_back(start);
-    std::queue<State*> states_to_go{};
-    states_to_go.emplace(start);
+    std::queue<State*> stack{};
+    stack.emplace(start);
     std::set<State*> visited_states = {start};
-    while(!states_to_go.empty()) {
-        State* state = states_to_go.front();
-        states_to_go.pop();
+    while(!stack.empty()) {
+        State* state = stack.front();
+        stack.pop();
         for (auto trans : state->transition) {
             for (auto neighbor : trans.second) {
                 if (visited_states.find(neighbor) == visited_states.end()) {
-                    states_to_go.emplace(neighbor);
+                    stack.emplace(neighbor);
                     visited_states.insert(neighbor);
                     states.emplace_back(neighbor);
                 }
@@ -252,6 +317,21 @@ Scanner::Scanner() {
  */ 
 int Scanner::scan(std::string &filename) {
     // TODO:
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: cannot open file " << filename << std::endl;
+        return -1;
+    }
+
+    std::string program = "";
+
+    for (std::string line; std::getline(file, line); ) {
+        program += line + "\n";
+    }
+
+    file.close();
+
     return 0;
 }
 
@@ -294,15 +374,10 @@ void Scanner::add_identifier_token(TokenClass token_class, unsigned int preceden
 
     id_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(id_nfa);
-
-    delete letter_nfa;
-    delete integer_nfa;
-    delete underscore_nfa;
 }
 
 /**
  * Token: INTEGER
- * RegExp: [1-9][0-9]+
  * RegExp: [0-9]+
  * Negative integer is recognized by unary operator MINUS
  * @param token_class
@@ -319,8 +394,6 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
 
     integer_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(integer_nfa);
-
-    delete temp_nfa;
 }
 
 /**
@@ -333,19 +406,17 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
 void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) {
     auto string_nfa = new NFA('"');
     auto quote_nfa = new NFA('"');
+    auto end_quote_nfa = new NFA('"');
 
     auto temp_nfa = NFA::from_any_char();
     temp_nfa->set_union(quote_nfa);
     temp_nfa->kleene_star();
 
     string_nfa->concat(temp_nfa);
-    string_nfa->concat(quote_nfa);
+    string_nfa->concat(end_quote_nfa);
 
     string_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(string_nfa);
-
-    delete quote_nfa;
-    delete temp_nfa;
 }
 
 /**
@@ -372,8 +443,4 @@ void Scanner::add_comment_token(TokenClass token_class, unsigned int precedence)
 
     comment_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(comment_nfa);
-
-    delete slash_nfa;
-    delete star_nfa;
-    delete temp_nfa;
 }

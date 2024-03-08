@@ -61,16 +61,16 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("|", LOR, 40);
         scanner.add_token("[&]", BAND, 30);
         scanner.add_token("[|]", BOR, 20);
-        /* Other Token Classes */
+        // /* Other Token Classes */
         scanner.add_token("=", ASSIGN);
         scanner.add_identifier_token(ID);
         scanner.add_integer_token(INTLITERAL);
-        scanner.add_string_token(STRINGLITERAL);
+        // scanner.add_string_token(STRINGLITERAL);
         scanner.add_comment_token(COMMENT);
-        // scanner.print_nfa();
-        scanner.NFA_to_DFA();
-        // scanner.print_dfa();
-        scanner.scan(filename);
+        scanner.print_nfa();
+        // scanner.NFA_to_DFA();
+        // scanner.print_dfa(); 
+        // scanner.scan(filename);
     } else {
         std::cout << "Please input the file name of Oat v.1 source program." << std::endl;
     }
