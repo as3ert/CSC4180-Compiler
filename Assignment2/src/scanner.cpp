@@ -9,7 +9,7 @@
  */
 
 #include "scanner.hpp"
-#include <stack>
+#include <queue>
 
 DFA::~DFA() {
     for (auto state : states) {
@@ -135,7 +135,6 @@ void NFA::concat(NFA* from) {
  * @param
  */
 void NFA::set_union(NFA* from) {
-    // TODO: Core dumped
     State* new_start = new State();
     State* new_end = new State();
 
@@ -183,43 +182,56 @@ void NFA::kleene_star() {
  */
 DFA* NFA::to_DFA() {
     DFA* dfa = new DFA();
-    DFA::State* dfa_start = new DFA::State();
-    dfa_start->id = dfa->states.size();
 
     std::set<NFA::State*> start_closure = epsilon_closure(start);
+
     std::map<std::set<NFA::State*>, DFA::State*> state_map;
-    state_map[start_closure] = dfa_start;
 
-    std::stack<std::set<NFA::State*>> stack;
-    stack.push(start_closure);
+    std::queue<std::set<NFA::State*>> queue;
+    queue.push(start_closure);
 
-    while (!stack.empty()) {
-        std::set<NFA::State*> closure = stack.top();
-        stack.pop();
+    while (! queue.empty()) {
+        std::set<NFA::State*> closure = queue.front();
+        queue.pop();
 
-        DFA::State* dfa_state = state_map[closure];
+        if (state_map.find(closure)== state_map.end()) {
+            DFA::State* state = new DFA::State();
+            state->id = dfa->states.size();
 
-        for (char c = 0; c <= 127; c ++) {
-            std::set<NFA::State*> next_closure = move(closure, c);
-            for (auto state : next_closure) {
-                std::set<NFA::State*> temp_closure = epsilon_closure(state);
-                next_closure.insert(temp_closure.begin(), temp_closure.end());
+            state_map[closure] = state;
+            dfa->states.push_back(state);
+        }
+
+        for (unsigned char c = 0; c <= 127; c ++) {
+            std::set<NFA::State*> next_closure = epsilon_closure(move(closure, c));
+
+            if (! next_closure.empty() && state_map.find(next_closure) == state_map.end()) {
+                queue.push(next_closure);
+
+                DFA::State* state = new DFA::State();
+                state->id = dfa->states.size(); 
+
+                state_map[next_closure] = state;
+                dfa->states.push_back(state);
             }
 
-            if (next_closure.empty()) {
-                continue;
+            if (! next_closure.empty()) {
+                state_map[closure]->transition[c] = state_map[next_closure];
             }
-
-            if (state_map.find(next_closure) == state_map.end()) {
-                DFA::State* next_dfa_state = new DFA::State();
-                next_dfa_state->id = dfa->states.size();
-                state_map[next_closure] = next_dfa_state;
-                stack.push(next_closure);
-            }
-
-            dfa_state->transition[c] = state_map[next_closure];
         }
     }
+    
+    for (auto closure : state_map) {
+        for (auto state : closure.first) {
+            if (state->accepted) {
+                closure.second->accepted = true;
+                closure.second->token_class = state->token_class;
+                break;
+            }
+        }
+    }
+    
+    return dfa;
 }
 
 /**
@@ -231,19 +243,36 @@ DFA* NFA::to_DFA() {
 std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
     std::set<NFA::State*> closure;
 
-    std::stack<NFA::State*> stack;
-    stack.push(state);
+    std::queue<NFA::State*> queue;
+    queue.push(state);
 
-    while (!stack.empty()) {
-        NFA::State* state = stack.top();
-        stack.pop();
+    while (! queue.empty()) {
+        NFA::State* state = queue.front();
+        queue.pop();
 
         closure.insert(state);
         for (auto neighbor : state->transition[EPSILON]) {
             if (closure.find(neighbor) == closure.end()) {
-                stack.push(neighbor);
+                queue.push(neighbor);
             }
         }
+    }
+
+    return closure;
+}
+
+/**
+ * Get the closure of the given Nstates set
+ * It means all the Nstates can be reached with the given Nstates set without any actions
+ * @param state: State* , the starting state of getting epsilon closure
+ * @return {set<State&>} The closure of state
+ */
+std::set<NFA::State*> NFA::epsilon_closure(std::set<State*> states) {
+    std::set<NFA::State*> closure;
+
+    for (auto state : states) {
+        std::set<NFA::State*> state_closure = epsilon_closure(state);
+        closure.insert(state_closure.begin(), state_closure.end());
     }
 
     return closure;
@@ -259,8 +288,9 @@ std::set<NFA::State*> NFA::move(std::set<NFA::State*> closure, char c) {
     std::set<NFA::State*> next_closure;
 
     for (auto state : closure) {
-        for (auto neighbor : state->transition[c]) {
-            next_closure.insert(neighbor);
+        auto it = state->transition.find(c);
+        if (it != state->transition.end()) {
+            next_closure.insert(it->second.begin(), it->second.end());
         }
     }
 
@@ -279,16 +309,16 @@ void NFA::print() {
 std::vector<NFA::State*> NFA::iter_states() {
     std::vector<State*> states{};
     states.emplace_back(start);
-    std::queue<State*> stack{};
-    stack.emplace(start);
+    std::queue<State*> queue{};
+    queue.emplace(start);
     std::set<State*> visited_states = {start};
-    while(!stack.empty()) {
-        State* state = stack.front();
-        stack.pop();
+    while(!queue.empty()) {
+        State* state = queue.front();
+        queue.pop();
         for (auto trans : state->transition) {
             for (auto neighbor : trans.second) {
                 if (visited_states.find(neighbor) == visited_states.end()) {
-                    stack.emplace(neighbor);
+                    queue.emplace(neighbor);
                     visited_states.insert(neighbor);
                     states.emplace_back(neighbor);
                 }
@@ -324,13 +354,90 @@ int Scanner::scan(std::string &filename) {
         return -1;
     }
 
-    std::string program = "";
-
-    for (std::string line; std::getline(file, line); ) {
-        program += line + "\n";
-    }
-
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string program = buffer.str();
     file.close();
+
+    std::string token = "";
+
+    DFA::State* state = dfa->states[0];
+
+    bool comment_flag = false;
+    bool string_flag = false;
+
+    for (int i = 0 ; i < program.size(); i ++) {
+        char c = program[i];
+
+        if (c == ' ' || c == '\n') {
+            continue;
+        }
+
+        token += program[i];
+
+        // if (c == '"') {
+        //     token += c;
+        //     // Keep adding characters until the closing double quote is found
+        //     while (i + 1 < program.size() && program[i + 1] != '"') {
+        //         token += program[++i];
+        //     }
+        //     if (i + 1 < program.size() && program[i + 1] == '"') {
+        //         token += program[++i]; // Add the closing double quote
+        //     }
+        //     // Output STRINGLITERAL token
+        //     std::cout << token << " " << token_class_to_str(state->token_class) << std::endl;
+        //     token = "";
+        //     state = dfa->states[0];
+        // }
+
+        auto it = state->transition.find(c);
+        if (it != state->transition.end()) {
+            state = it->second;
+            TokenClass token_class = state->token_class;
+            if (token_class == TokenClass::INTLITERAL) {
+                std::cout << token << " " << token_class_to_str(token_class) << std::endl;
+            } else if (token_class == TokenClass::STRINGLITERAL) {
+                std::cout << token << " " << token_class_to_str(token_class) << std::endl;
+            } else if (token_class == TokenClass::COMMENT) {
+                std::cout << token << " " << token_class_to_str(token_class) << std::endl;
+            }
+
+            if (state->accepted) {
+                for (int j = i + 1; j < program.size(); j ++) {
+                    char remain_c = program[j];
+                    auto remain_it = state->transition.find(remain_c);
+                    if (remain_it == state->transition.end()) {
+                        break;
+                    }
+
+                    state = remain_it->second;
+                    token += remain_c;
+                    TokenClass remain_token_class = state->token_class;
+                    // std::cout << token <<  " " << token_class_to_str(remain_token_class) << std::endl; 
+
+                    if (token_class == TokenClass::STRINGLITERAL) {
+                        
+                    } else if (token_class == TokenClass::COMMENT &&
+                               remain_token_class == TokenClass::STAR) {
+                        
+                    }
+
+                    if (state->accepted) {
+                        i = j;
+                    }
+
+                }
+                
+                // std::cout << token << " " << token_class_to_str(state->token_class) << std::endl;
+                token = "";
+            } else {
+                std::cerr << "Error: Invalid token " << token << " " << token_class_to_str(token_class) << std::endl;
+                token = "";
+            }
+
+            state = dfa->states[0];
+        }   
+    }
 
     return 0;
 }
@@ -408,7 +515,8 @@ void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) 
     auto quote_nfa = new NFA('"');
     auto end_quote_nfa = new NFA('"');
 
-    auto temp_nfa = NFA::from_any_char();
+    // auto temp_nfa = NFA::from_any_char();
+    auto temp_nfa = new NFA();
     temp_nfa->set_union(quote_nfa);
     temp_nfa->kleene_star();
 
@@ -434,7 +542,8 @@ void Scanner::add_comment_token(TokenClass token_class, unsigned int precedence)
     comment_nfa->concat(slash_nfa);
     comment_nfa->concat(star_nfa);
 
-    auto temp_nfa = NFA::from_any_char();
+    // auto temp_nfa = NFA::from_any_char();
+    auto temp_nfa = new NFA();
     temp_nfa->kleene_star();
 
     comment_nfa->concat(temp_nfa);

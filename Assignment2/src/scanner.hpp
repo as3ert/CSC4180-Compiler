@@ -40,7 +40,7 @@ public:
         static unsigned int increment_id;
 
         State() : id(increment_id++) {
-            transition[EPSILON] = nullptr;
+            // transition[EPSILON] = nullptr;
         }
 
         bool operator==(const State& other) const {
