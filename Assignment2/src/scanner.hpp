@@ -39,9 +39,7 @@ public:
 
         static unsigned int increment_id;
 
-        State() : id(increment_id++) {
-            // transition[EPSILON] = nullptr;
-        }
+        State() : id(increment_id++) {}
 
         bool operator==(const State& other) const {
             return id == other.id;
