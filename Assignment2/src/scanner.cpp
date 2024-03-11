@@ -475,12 +475,9 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
  * @return
  */
 void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) {
-    // TODO: More work
     NFA* string_nfa = new NFA('"');
 
     NFA* temp_nfa = NFA::from_any_char();
-    // NFA* temp_nfa = NFA::from_digit();
-    // NFA* temp_nfa = new NFA('a');
     temp_nfa->kleene_star();
 
     string_nfa->concat(temp_nfa);
