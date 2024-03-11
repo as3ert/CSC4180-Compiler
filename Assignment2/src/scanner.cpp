@@ -369,11 +369,13 @@ int Scanner::scan(std::string &filename) {
 
     DFA::State* state = dfa->states[0];
 
+    bool long_token_flag = false;
     bool token_class_flag = false;
 
     // I can run
     for (int i = 0; i < program.size(); i ++) {
         char c = program[i];
+
 
         if (c == ' ' || c == '\n') {
             continue;
@@ -388,9 +390,10 @@ int Scanner::scan(std::string &filename) {
 
             if (state->accepted) {
                 if (c == '"') {
+
                     // std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
                 } else {
-                    for (int j = i  + 1; j < program.size(); j ++) {
+                    for (int j = i + 1; j < program.size(); j ++) {
                         char remain_c = program[j];
 
                         auto remain_it = state->transition.find(remain_c);
@@ -401,16 +404,16 @@ int Scanner::scan(std::string &filename) {
 
                         if (state->accepted) {
                             i = j;
+                            long_token_flag = true;
                         }
 
                         state = remain_it->second;
                         token += remain_c;
                     }
                 }
-                
             }
         } else {
-            i--;
+            i --;
             state = dfa->states[0];
             token.clear();
         }

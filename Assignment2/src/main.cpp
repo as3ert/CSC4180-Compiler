@@ -35,6 +35,7 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("int", TINT);
         scanner.add_token("bool", TBOOL);
         scanner.add_token("str", TSTRING);
+        scanner.add_token("true", TRUE);
         /* Punctuations and Brackets */
         scanner.add_token("(", LPAREN);
         scanner.add_token(")", RPAREN);
@@ -61,6 +62,7 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("|", LOR, 40);
         scanner.add_token("[&]", BAND, 30);
         scanner.add_token("[|]", BOR, 20);
+        scanner.add_token("~", TILDE, 20);
         /* Other Token Classes */
         scanner.add_token("=", ASSIGN);
         scanner.add_identifier_token(ID);
