@@ -63,7 +63,6 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("[|]", BOR, 20);
         /* Other Token Classes */
         scanner.add_token("=", ASSIGN);
-        scanner.add_token(" ", NONE);
         scanner.add_identifier_token(ID);
         scanner.add_integer_token(INTLITERAL);
         scanner.add_string_token(STRINGLITERAL);

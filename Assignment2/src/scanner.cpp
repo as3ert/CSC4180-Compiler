@@ -76,9 +76,9 @@ NFA* NFA::from_string(std::string str) {
  * @return
  */
 NFA* NFA::from_letter() {
-    NFA* letter_nfa = new NFA();
+    NFA* letter_nfa = new NFA('a');
 
-    for (char c = 'a'; c <= 'z'; c ++) {
+    for (char c = 'b'; c <= 'z'; c ++) {
         NFA* char_nfa = new NFA(c);
         letter_nfa->set_union(char_nfa);
     }
@@ -95,9 +95,9 @@ NFA* NFA::from_letter() {
  * @return
  */
 NFA* NFA::from_digit() {
-    NFA* integer_nfa = new NFA();
+    NFA* integer_nfa = new NFA('0');
 
-    for (char c = '0'; c <= '9'; c ++) {
+    for (char c = '1'; c <= '9'; c ++) {
         NFA* char_nfa = new NFA(c);
         integer_nfa->set_union(char_nfa);
     }
@@ -109,10 +109,10 @@ NFA* NFA::from_digit() {
  * NFA for any char (ASCII 0-127)
  */
 NFA* NFA::from_any_char() {
-    NFA* any_char_nfa = new NFA();
+    NFA* any_char_nfa = new NFA(0);
 
     // Overflow control
-    for (unsigned char c = 0; c <= 127; c ++) {
+    for (unsigned char c = 1; c <= 127; c ++) {
         NFA* char_nfa = new NFA(c);
         any_char_nfa->set_union(char_nfa);
     }
@@ -139,8 +139,9 @@ void NFA::set_union(NFA* from) {
     State* new_end = new State();
 
     new_start->transition[EPSILON] = {start, from->start};
+
     end->transition[EPSILON] = {new_end};
-    from->end->transition[EPSILON] = {new_end};
+    from->end->transition[EPSILON]= {new_end};
 
     start = new_start;
     end = new_end;
@@ -153,10 +154,15 @@ void NFA::set_union(std::set<NFA*> set) {
     State* new_start = new State();
     State* new_end = new State();
 
+    new_start->transition[EPSILON] = {start};
     for (auto nfa : set) {
-        new_start->transition[EPSILON] = {nfa->start};
+        new_start->transition[EPSILON].insert(nfa->start);
+    }
+
+    for (auto nfa : set) {
         nfa->end->transition[EPSILON] = {new_end};
     }
+    end->transition[EPSILON] = {new_end};
 
     start = new_start;
     end = new_end;
@@ -247,11 +253,11 @@ std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
     queue.push(state);
 
     while (! queue.empty()) {
-        NFA::State* state = queue.front();
+        NFA::State* current_state = queue.front();
         queue.pop();
 
-        closure.insert(state);
-        for (auto neighbor : state->transition[EPSILON]) {
+        closure.insert(current_state);
+        for (auto neighbor : current_state->transition[EPSILON]) {
             if (closure.find(neighbor) == closure.end()) {
                 queue.push(neighbor);
             }
@@ -264,7 +270,7 @@ std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
 /**
  * Get the closure of the given Nstates set
  * It means all the Nstates can be reached with the given Nstates set without any actions
- * @param state: State* , the starting state of getting epsilon closure
+ * @param states: set<State*> , the starting states of getting epsilon closure
  * @return {set<State&>} The closure of state
  */
 std::set<NFA::State*> NFA::epsilon_closure(std::set<State*> states) {
@@ -346,7 +352,7 @@ Scanner::Scanner() {
  * @return 0 for success, -1 for failure
  */ 
 int Scanner::scan(std::string &filename) {
-    // TODO: fix INTLITERAL priority
+    // TODO: fix STRING
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -363,70 +369,42 @@ int Scanner::scan(std::string &filename) {
 
     DFA::State* state = dfa->states[0];
 
-    bool comment_flag = false;
-    bool string_flag = false;
     bool token_class_flag = false;
 
-    for (int i = 0 ; i < program.size(); i ++) {
+    // I can run
+    for (int i = 0; i < program.size(); i++) {
         char c = program[i];
+
+        std::string coming_token = token + c;
+
+        if (coming_token == "/*") {
+            token_class_flag = true;
+        } else if (coming_token == "*/") {
+            token_class_flag = false;
+        } else if (c == '"') {
+            token_class_flag = !token_class_flag;
+        }
 
         if (c == ' ' || c == '\n') {
             continue;
         }
 
-        token += program[i];
+        token += c;
 
         auto it = state->transition.find(c);
         if (it != state->transition.end()) {
             state = it->second;
-            TokenClass previous_token_class = state->token_class;
-
-            if (state->accepted) {
-                if (previous_token_class == TokenClass::COMMENT ||
-                    previous_token_class == TokenClass::STRINGLITERAL) {
-                    
-                    TokenClass token_class;
-                    for (int j = i + 1; j < program.size(); j ++) {
-                        char remain_c = program[j];
-                        state = dfa->states[0];
-
-                        auto it = state->transition.find(remain_c);
-                        state = it->second;
-
-                        token += remain_c;
-
-                        token_class = state->token_class;
-                        
-                        if (token_class == previous_token_class) {
-                            i = j;
-                            break;
-                        }
-                    }
-                } else {
-                    for (int j = i + 1; j < program.size(); j ++) {
-                        char remain_c = program[j];
-
-                        auto remain_it = state->transition.find(remain_c);
-
-                        if (remain_it == state->transition.end()) {
-                            break;
-                        }
-
-                        if (state->accepted) {
-                            i = j;
-                        }
-
-                        state = remain_it->second;
-                        token += remain_c;
-                    }
-                }
-                std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
-                token = "";
-            } else {
-                std::cerr << "Error: Invalid token " << token << std::endl;
-                token = "";
-            }
+        } else {
+            i--;
             state = dfa->states[0];
+            token.clear();
+        }
+
+        // Check if the current state is an accepting state
+        if (state->accepted) {
+            std::cout << token_class_to_str(state->token_class) << ": " << token << std::endl;
+            state = dfa->states[0];
+            token.clear();
         }
     }
 
@@ -443,12 +421,7 @@ int Scanner::scan(std::string &filename) {
  * @return
  */
 void Scanner::add_token(std::string token_str, TokenClass token_class, unsigned int precedence) {
-    NFA* keyword_nfa = new NFA();
-    
-    NFA* string_nfa = NFA::from_string(token_str);
-
-    keyword_nfa->concat(string_nfa);
-
+    auto keyword_nfa = NFA::from_string(token_str);
     keyword_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(keyword_nfa);
 }
@@ -461,19 +434,13 @@ void Scanner::add_token(std::string token_str, TokenClass token_class, unsigned 
  * @return
  */
 void Scanner::add_identifier_token(TokenClass token_class, unsigned int precedence) {
-    NFA* id_nfa = new NFA();
-    NFA* temp_nfa = new NFA();
+    auto id_nfa = NFA::from_letter();
 
-    NFA* letter_nfa = NFA::from_letter();
-    NFA* integer_nfa = NFA::from_digit();
-    NFA* underscore_nfa = new NFA('_');
-
-    temp_nfa->concat(letter_nfa);
-    temp_nfa->set_union(integer_nfa);
-    temp_nfa->set_union(underscore_nfa);
+    NFA* temp_nfa = NFA::from_letter();
+    temp_nfa->set_union(NFA::from_digit());
+    temp_nfa->set_union(new NFA('_'));
     temp_nfa->kleene_star();
 
-    id_nfa->concat(letter_nfa);
     id_nfa->concat(temp_nfa);
 
     id_nfa->set_token_class_for_end_state(token_class, precedence);
@@ -489,15 +456,11 @@ void Scanner::add_identifier_token(TokenClass token_class, unsigned int preceden
  * @return
  */
 void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence) {
-    NFA* integer_nfa = new NFA();
-    NFA* temp_nfa = new NFA();
+    auto integer_nfa = NFA::from_digit();
 
-    NFA* digit_nfa = NFA::from_digit();
-
-    temp_nfa->concat(digit_nfa);
+    auto temp_nfa = NFA::from_digit();
     temp_nfa->kleene_star();
 
-    integer_nfa->concat(digit_nfa);
     integer_nfa->concat(temp_nfa);
 
     integer_nfa->set_token_class_for_end_state(token_class, precedence);
@@ -512,31 +475,16 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
  * @return
  */
 void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) {
-    // NFA* string_nfa = new NFA();
-    // NFA* quote_nfa = new NFA('"');
+    // TODO: More work
+    NFA* string_nfa = new NFA('"');
 
-    // NFA* temp_nfa = NFA::from_any_char();
-    // temp_nfa->kleene_star();
-
-    // string_nfa->concat(quote_nfa);
-    // string_nfa->concat(temp_nfa);
-    // string_nfa->concat(quote_nfa);
-
-    // string_nfa->set_token_class_for_end_state(token_class, precedence);
-    // nfa->set_union(string_nfa);
-
-    NFA* string_nfa = new NFA();
-    NFA* temp_nfa = new NFA();
-
-    NFA* quote_nfa = new NFA('"');
-    NFA* any_char_nfa = NFA::from_any_char();
-
-    temp_nfa->concat(any_char_nfa);
+    NFA* temp_nfa = NFA::from_any_char();
+    // NFA* temp_nfa = NFA::from_digit();
+    // NFA* temp_nfa = new NFA('a');
     temp_nfa->kleene_star();
 
-    string_nfa->concat(quote_nfa);
     string_nfa->concat(temp_nfa);
-    string_nfa->concat(quote_nfa);
+    string_nfa->concat(new NFA('"'));
 
     string_nfa->set_token_class_for_end_state(token_class, precedence);
     nfa->set_union(string_nfa);
@@ -550,22 +498,16 @@ void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) 
  * @return
  */
 void Scanner::add_comment_token(TokenClass token_class, unsigned int precedence) {
-    NFA* comment_nfa = new NFA();
-    NFA* temp_nfa = new NFA();
+    NFA* comment_nfa = new NFA('/');
+    comment_nfa->concat(new NFA('*'));
 
-    NFA* slash_nfa = new NFA('/');
-    NFA* star_nfa = new NFA('*');
-    NFA* any_char_nfa = NFA::from_any_char();
-
-    temp_nfa->concat(any_char_nfa);
+    NFA* temp_nfa = NFA::from_any_char();
     temp_nfa->kleene_star();
 
-    comment_nfa->concat(slash_nfa);
-    comment_nfa->concat(star_nfa);
     comment_nfa->concat(temp_nfa);
-    comment_nfa->concat(star_nfa);
-    comment_nfa->concat(slash_nfa);
+    comment_nfa->concat(new NFA('*'));
+    comment_nfa->concat(new NFA('/'));
 
     comment_nfa->set_token_class_for_end_state(token_class, precedence);
-    nfa->set_union(comment_nfa); 
+    nfa->set_union(comment_nfa);
 }
