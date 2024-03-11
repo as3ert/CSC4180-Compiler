@@ -372,28 +372,43 @@ int Scanner::scan(std::string &filename) {
     bool token_class_flag = false;
 
     // I can run
-    for (int i = 0; i < program.size(); i++) {
+    for (int i = 0; i < program.size(); i ++) {
         char c = program[i];
-
-        std::string coming_token = token + c;
-
-        if (coming_token == "/*") {
-            token_class_flag = true;
-        } else if (coming_token == "*/") {
-            token_class_flag = false;
-        } else if (c == '"') {
-            token_class_flag = !token_class_flag;
-        }
 
         if (c == ' ' || c == '\n') {
             continue;
         }
 
         token += c;
+        // std::cout << c << std::endl;
 
         auto it = state->transition.find(c);
         if (it != state->transition.end()) {
             state = it->second;
+
+            if (state->accepted) {
+                if (c == '"') {
+                    // std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
+                } else {
+                    for (int j = i  + 1; j < program.size(); j ++) {
+                        char remain_c = program[j];
+
+                        auto remain_it = state->transition.find(remain_c);
+
+                        if (remain_it == state->transition.end()) {
+                            break;
+                        }
+
+                        if (state->accepted) {
+                            i = j;
+                        }
+
+                        state = remain_it->second;
+                        token += remain_c;
+                    }
+                }
+                
+            }
         } else {
             i--;
             state = dfa->states[0];
@@ -402,7 +417,7 @@ int Scanner::scan(std::string &filename) {
 
         // Check if the current state is an accepting state
         if (state->accepted) {
-            std::cout << token_class_to_str(state->token_class) << ": " << token << std::endl;
+            std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
             state = dfa->states[0];
             token.clear();
         }

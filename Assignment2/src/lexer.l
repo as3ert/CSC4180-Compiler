@@ -28,7 +28,7 @@ COMMENT         \/\*([^*]|\*+[^*/])*\*+\/
 GLOBAL          "global"
 TINT            "int"
 TBOOL           "bool"
-TSTRING         "string"
+TSTRING         "str"
 NULL            "null"
 TRUE            "true"
 FALSE           "false"
@@ -108,10 +108,10 @@ STRINGLITERAL   \"(.)*\"
 {RASHIFT}       { printf("RASHIFT %s\n", yytext); }
 {LESS}          { printf("LESS %s\n", yytext); }
 {LESSEQ}        { printf("LESSEQ %s\n", yytext); }
-{GREAT}         { printf("GREATER %s\n", yytext); }
-{GREATEQ}       { printf("GREATEREQ %s\n", yytext); }
-{EQ}            { printf("EQUAL %s\n", yytext); }
-{NEQ}           { printf("NOTEQ %s\n", yytext); }
+{GREAT}         { printf("GREAT %s\n", yytext); }
+{GREATEQ}       { printf("GREATEQ %s\n", yytext); }
+{EQ}            { printf("EQ %s\n", yytext); }
+{NEQ}           { printf("NEQ %s\n", yytext); }
 {LAND}          { printf("LAND %s\n", yytext); }
 {LOR}           { printf("LOR %s\n", yytext); }
 {BAND}          { printf("BAND %s\n", yytext); }
