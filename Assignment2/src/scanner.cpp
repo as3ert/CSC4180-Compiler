@@ -106,13 +106,16 @@ NFA* NFA::from_digit() {
 }
 
 /**
- * NFA for any char (ASCII 0-127)
+ * NFA for any char (ASCII 0-127) except the given sr=tring
  */
-NFA* NFA::from_any_char() {
+NFA* NFA::from_any_char_except(std::string str) {
     NFA* any_char_nfa = new NFA(0);
-
+    
     // Overflow control
     for (unsigned char c = 1; c <= 127; c ++) {
+        if (str.find(c) != std::string::npos) {
+            continue;
+        }
         NFA* char_nfa = new NFA(c);
         any_char_nfa->set_union(char_nfa);
     }
@@ -200,12 +203,14 @@ DFA* NFA::to_DFA() {
         std::set<NFA::State*> closure = queue.front();
         queue.pop();
 
-        if (state_map.find(closure)== state_map.end()) {
+        if (state_map.find(closure) == state_map.end()) {
             DFA::State* state = new DFA::State();
             state->id = dfa->states.size();
 
             state_map[closure] = state;
             dfa->states.push_back(state);
+
+            // std::cout << state->id << std::endl;
         }
 
         for (unsigned char c = 0; c <= 127; c ++) {
@@ -219,6 +224,8 @@ DFA* NFA::to_DFA() {
 
                 state_map[next_closure] = state;
                 dfa->states.push_back(state);
+
+                // std::cout << state->id << std::endl;
             }
 
             if (! next_closure.empty()) {
@@ -258,7 +265,7 @@ std::set<NFA::State*> NFA::epsilon_closure(NFA::State* state) {
 
         closure.insert(current_state);
         for (auto neighbor : current_state->transition[EPSILON]) {
-            if (closure.find(neighbor) == closure.end()) {
+            if (closure.find(neighbor) == closure.end() && neighbor != end) {
                 queue.push(neighbor);
             }
         }
@@ -277,7 +284,24 @@ std::set<NFA::State*> NFA::epsilon_closure(std::set<State*> states) {
     std::set<NFA::State*> closure;
 
     for (auto state : states) {
-        std::set<NFA::State*> state_closure = epsilon_closure(state);
+
+        std::set<NFA::State*> state_closure;
+
+        std::queue<NFA::State*> queue;
+        queue.push(state);
+
+        while (! queue.empty()) {
+            NFA::State* current_state = queue.front();
+            queue.pop();
+
+            state_closure.insert(current_state);
+            for (auto neighbor : current_state->transition[EPSILON]) {
+                if (state_closure.find(neighbor) == state_closure.end()) {
+                    queue.push(neighbor);
+                }
+            }
+        }
+
         closure.insert(state_closure.begin(), state_closure.end());
     }
 
@@ -352,7 +376,7 @@ Scanner::Scanner() {
  * @return 0 for success, -1 for failure
  */ 
 int Scanner::scan(std::string &filename) {
-    // TODO: fix STRING
+    // TODO: fix COMMENT
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -369,19 +393,30 @@ int Scanner::scan(std::string &filename) {
 
     DFA::State* state = dfa->states[0];
 
-    bool long_token_flag = false;
     bool token_class_flag = false;
 
-    // I can run
     for (int i = 0; i < program.size(); i ++) {
+        // std::cout << "test " << i << std::endl; 
         char c = program[i];
 
+        std::string temp_token = token + c;
 
-        if (c == ' ' || c == '\n') {
+        if (temp_token == "/*") {
+            token_class_flag = true;
+        } else if (temp_token == "*/") {
+            token_class_flag = false;
+        }
+        
+        if (c == '"') {
+            token_class_flag = ! token_class_flag;
+        }
+
+        if (! token_class_flag && c == ' ' || c == '\n') {
             continue;
         }
 
         token += c;
+
         // std::cout << c << std::endl;
 
         auto it = state->transition.find(c);
@@ -389,27 +424,26 @@ int Scanner::scan(std::string &filename) {
             state = it->second;
 
             if (state->accepted) {
-                if (c == '"') {
+                // std::cout << state->id << std::endl;
+                for (int j = i + 1; j < program.size(); j ++) {
+                    char remain_c = program[j];
+                    // std::cout << remain_c << " " << j << std::endl;
 
-                    // std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
-                } else {
-                    for (int j = i + 1; j < program.size(); j ++) {
-                        char remain_c = program[j];
+                    auto remain_it = state->transition.find(remain_c);
 
-                        auto remain_it = state->transition.find(remain_c);
-
-                        if (remain_it == state->transition.end()) {
-                            break;
-                        }
-
-                        if (state->accepted) {
-                            i = j;
-                            long_token_flag = true;
-                        }
-
-                        state = remain_it->second;
-                        token += remain_c;
+                    if (remain_it == state->transition.end()) {
+                        // std::cout << state->id << std::endl;
+                        break;
                     }
+                    
+                    i = j;
+                    // if (state->accepted || state->transition.empty()) {
+                    //     i = j;
+                    //     std::cout << "Goto " << i << std::endl;
+                    // }
+
+                    state = remain_it->second;
+                    token += remain_c;
                 }
             }
         } else {
@@ -418,7 +452,6 @@ int Scanner::scan(std::string &filename) {
             token.clear();
         }
 
-        // Check if the current state is an accepting state
         if (state->accepted) {
             std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
             state = dfa->states[0];
@@ -495,7 +528,7 @@ void Scanner::add_integer_token(TokenClass token_class, unsigned int precedence)
 void Scanner::add_string_token(TokenClass token_class, unsigned int precedence) {
     NFA* string_nfa = new NFA('"');
 
-    NFA* temp_nfa = NFA::from_any_char();
+    NFA* temp_nfa = NFA::from_any_char_except("\"");
     temp_nfa->kleene_star();
 
     string_nfa->concat(temp_nfa);
@@ -516,7 +549,7 @@ void Scanner::add_comment_token(TokenClass token_class, unsigned int precedence)
     NFA* comment_nfa = new NFA('/');
     comment_nfa->concat(new NFA('*'));
 
-    NFA* temp_nfa = NFA::from_any_char();
+    NFA* temp_nfa = NFA::from_any_char_except("*/");
     temp_nfa->kleene_star();
 
     comment_nfa->concat(temp_nfa);

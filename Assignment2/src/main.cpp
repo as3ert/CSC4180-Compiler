@@ -40,7 +40,7 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("(", LPAREN);
         scanner.add_token(")", RPAREN);
         scanner.add_token("[", LBRACKET);
-        scanner.add_token("]", RBRACKET);
+        scanner.add_token("]", RBRACKET); 
         scanner.add_token("{", LBRACE);
         scanner.add_token("}", RBRACE);
         scanner.add_token(";", SEMICOLON);

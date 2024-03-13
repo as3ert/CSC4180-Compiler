@@ -128,7 +128,7 @@ public:
 
     static NFA* from_digit();
 
-    static NFA* from_any_char();
+    static NFA* from_any_char_except(std::string str);
 
 /* Common Operations of Formal Lanuage */
 public:
@@ -137,8 +137,6 @@ public:
     void set_union(NFA* from);
 
     void set_union(std::set<NFA*> set);
-
-    void set_intersect(NFA* from);
 
     void kleene_star();
 
@@ -180,7 +178,7 @@ class Scanner {
 public:
     Scanner();
 
-public:   
+public:
     int scan(std::string &filename);
 
     void add_token(std::string token_str, TokenClass token_class, unsigned int precedence = 100);
