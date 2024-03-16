@@ -1,4 +1,4 @@
-# CUHKSZ CSC4180 2024Spring
+# CUHKSZ CSC4180 2024 Spring
 
 Hello everyone, welcome to take the course CSC4180: Compiler Construction offered by The Chinese University of Hong Kong, Shenzhen (CUHK-SZ). In this course, you are going to learn the fundamental basics of compiler and get a hands-on exercise implementing your compiler for both the Micro language and the simple C language grammar. This course mainly covers the compiler frontend and only gives a very brief introduction to the backend. To keep our course content up-to-date, LLVM is introduced and you need to build the frontend that finally generates LLVM IR, and then use the LLVM backend to do the optimization and code generation.
 
