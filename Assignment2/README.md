@@ -163,8 +163,6 @@ The `NFA()` class stores token classes at the end state of each NFA. And in the 
 
 ## Why still need to convert NFA into DFA for lexical analysis in most cases?
 
-Converting NFA into DFA is often necessary for lexical analysis in most cases due to several reasons:
-
 1.  **Efficiency**: DFAs are generally more efficient to execute than NFAs. DFAs can reduce state and transitions, making them faster to process during lexical analysis, especially for large input streams.
 2.  **Determinism**: DFAs have a deterministic transition function, meaning that for each state and input symbol, there is exactly one next state. This determinism simplifies the implementation and guarantees predictable behavior during lexical analysis.
 3.  **Tokenization**: DFAs are well-suited for tokenization tasks because they can be designed to recognize specific token patterns efficiently. By converting the regular expression-based NFA into a DFA, you can optimize the recognition of token patterns and ensure that the scanner identifies the longest and most precedent match correctly.
