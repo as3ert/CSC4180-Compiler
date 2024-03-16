@@ -195,7 +195,7 @@ This sub-routine handles the following LLVM IR instructions:
 store i32 <rvalue>, i32* %<variable>
 ```
 
--   Function`gen_read_llvm_ir()`
+-   Function `gen_read_llvm_ir()`
 
 This sub-routine handles the following LLVM IR instructions:
 
