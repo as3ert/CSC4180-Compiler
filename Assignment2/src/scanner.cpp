@@ -209,8 +209,6 @@ DFA* NFA::to_DFA() {
 
             state_map[closure] = state;
             dfa->states.push_back(state);
-
-            // std::cout << state->id << std::endl;
         }
 
         for (unsigned char c = 0; c <= 127; c ++) {
@@ -224,8 +222,6 @@ DFA* NFA::to_DFA() {
 
                 state_map[next_closure] = state;
                 dfa->states.push_back(state);
-
-                // std::cout << state->id << std::endl;
             }
 
             if (! next_closure.empty()) {
@@ -376,7 +372,6 @@ Scanner::Scanner() {
  * @return 0 for success, -1 for failure
  */ 
 int Scanner::scan(std::string &filename) {
-    // TODO: fix COMMENT
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -393,54 +388,51 @@ int Scanner::scan(std::string &filename) {
 
     DFA::State* state = dfa->states[0];
 
-    bool token_class_flag = false;
+    bool string_flag = false;
+    bool comment_flag = false;
 
     for (int i = 0; i < program.size(); i ++) {
-        // std::cout << "test " << i << std::endl; 
         char c = program[i];
 
         std::string temp_token = token + c;
-
-        if (temp_token == "/*") {
-            token_class_flag = true;
-        } else if (temp_token == "*/") {
-            token_class_flag = false;
-        }
         
         if (c == '"') {
-            token_class_flag = ! token_class_flag;
+            string_flag = ! string_flag;
         }
 
-        if (! token_class_flag && c == ' ' || c == '\n') {
+        if (! string_flag && c == ' ' || c == '\n') {
             continue;
         }
 
         token += c;
 
-        // std::cout << c << std::endl;
+        if (temp_token == "/*") {
+            comment_flag = true;
+        } else if (temp_token.length() > 1) {
+            if (temp_token.substr(temp_token.length() - 2) == "*/") {
+                comment_flag = false;
+            }
+        }
+
+        if (comment_flag) {
+            continue;
+        }
 
         auto it = state->transition.find(c);
         if (it != state->transition.end()) {
             state = it->second;
 
             if (state->accepted) {
-                // std::cout << state->id << std::endl;
                 for (int j = i + 1; j < program.size(); j ++) {
                     char remain_c = program[j];
-                    // std::cout << remain_c << " " << j << std::endl;
 
                     auto remain_it = state->transition.find(remain_c);
 
                     if (remain_it == state->transition.end()) {
-                        // std::cout << state->id << std::endl;
                         break;
                     }
                     
                     i = j;
-                    // if (state->accepted || state->transition.empty()) {
-                    //     i = j;
-                    //     std::cout << "Goto " << i << std::endl;
-                    // }
 
                     state = remain_it->second;
                     token += remain_c;
