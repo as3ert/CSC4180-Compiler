@@ -143,8 +143,6 @@ Overall, regular expressions offer a convenient and effective way to specify lex
 
 ## Why NFA is more suitable than DFA to recognize regular expression, and how did I enable NFA to recognize different kinds of regular expression?
 
-NFA are often more suitable than DFA for recognizing regular expressions due to their flexibility and simplicity in construction. Here are some reasons why NFA is preferred over DFA for this purpose:
-
 1.  **Flexibility in State Transitions**: NFAs allow for multiple possible transitions from a single state on a given input symbol. This flexibility allows NFAs to represent more complex patterns efficiently, as they can explore multiple paths simultaneously. In contrast, DFAs have a single deterministic transition for each state and input symbol, making them less expressive for certain regular expressions.
 2.  **Simplicity in Construction**: NFAs are often simpler to construct than DFAs for complex regular expressions. The construction process for NFAs can closely mirror the regular expression itself, making it easier to translate a regular expression directly into an NFA. This simplicity aids in understanding and implementing regular expression recognition algorithms.
 3.  **Ease of Union and Concatenation**: NFAs naturally support operations like union and concatenation, which are fundamental for constructing regular expressions. For example, the union of two NFAs can be achieved by combining their start states into a new start state, while concatenation involves linking the end state of one NFA to the start state of another.
