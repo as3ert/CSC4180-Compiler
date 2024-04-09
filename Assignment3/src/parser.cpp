@@ -134,6 +134,7 @@ void Parser::computeNullableFirstFollowSets() {
 
                 // Update FOLLOW sets
                 for (int i = 0; i < length; ++ i) {
+                    allNullableFollow = true;
                     const string& symbol = symbols[i];
 
                     for (int j = i + 1; j < length; ++ j) {
@@ -153,21 +154,21 @@ void Parser::computeNullableFirstFollowSets() {
                     }
 
                     if (allNullableFollow) {
-                        if (symbol == "block")
-                            cout << nonTerminal << " " << symbol << endl;
                         for (const string& followSymbol : followSets[nonTerminal]) {
                             if (followSets[symbol].count(followSymbol) == 0) {
                                 followSets[symbol].insert(followSymbol);
                                 change = true;
                             }
                         }
-                    } else {
-                        allNullableFollow = true;
                     }
                 }
             }
         }
     }
+}
+
+void Parser::constructParsingTable() {
+    
 }
 
 int Parser::parse(const string& inputProgramFile) {
