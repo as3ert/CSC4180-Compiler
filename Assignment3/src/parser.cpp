@@ -60,6 +60,7 @@ Parser::Parser(const string& grammarFile) {
     }
 
     computeNullableFirstFollowSets();
+    constructParsingTable();
 }
 
 /**
@@ -126,7 +127,7 @@ void Parser::computeNullableFirstFollowSets() {
                     }
                 }
 
-                // Update nullable
+                // Update Nullable
                 if (allNullableFirst && ! nullable[nonTerminal]) {
                     nullable[nonTerminal] = true;
                     change = true;
@@ -167,8 +168,80 @@ void Parser::computeNullableFirstFollowSets() {
     }
 }
 
+/**
+ * Construct the Parsing Table
+ */
 void Parser::constructParsingTable() {
-    
+    parsingTable.clear();
+    for (const auto& nonTerminal : nonTerminals) {
+        for (const auto& terminal : terminals) {
+            parsingTable[nonTerminal][terminal] = ProductionRule();
+        }
+        parsingTable[nonTerminal]["$"] = ProductionRule();
+    }
+
+    // Iterate over each production rule
+    for (const auto& pair : grammar) {
+        const string& nonTerminal = pair.first;
+        const auto& rules = pair.second;
+
+        for (auto& rule : rules) {
+            const auto& symbols = rule.symbols;
+            const string& epsilon = "''";
+            int length = symbols.size();
+
+            // for (const string& symbol : symbols) {
+
+            //     for (const string& terminal: firstSets[symbol]) {
+            //         if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
+            //             parsingTable[nonTerminal][terminal] = rule;
+            //         }
+            //     }
+
+            //     if (isNullable(symbol)) {
+            //         for (const string& terminal : followSets[nonTerminal]) {
+            //             if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
+            //                 parsingTable[nonTerminal][terminal] = rule;
+            //             }
+            //         }
+            //     }
+            //     else {
+            //         break;
+            //     }
+            // }
+
+            for (int i = 0; i < length; ++ i) {
+                const string& symbol = symbols[i];
+                const string& nextSymbol = (i + 1 < length) ? symbols[i + 1] : "";
+
+                for (const string& terminal: firstSets[symbol]) {
+                    if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
+                        parsingTable[nonTerminal][terminal] = rule;
+                    }
+                }
+
+                if (! isNullable(symbol)) {
+                    break;
+                }
+
+                if (i + 1 == length) {
+                    for (const string& terminal : followSets[nonTerminal]) {
+                        if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
+                            parsingTable[nonTerminal][terminal] = rule;
+                        }
+                    }
+                }
+            }
+            // if (firstSets[symbols[0]].find(epsilon) != firstSets[symbols[0]].end()) {
+            //     cout << nonTerminal << endl;
+            //     for (const string& terminal : followSets[nonTerminal]) {
+            //         if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
+            //             parsingTable[nonTerminal][terminal] = rule;
+            //         }
+            //     }
+            // }
+        }
+    }
 }
 
 int Parser::parse(const string& inputProgramFile) {

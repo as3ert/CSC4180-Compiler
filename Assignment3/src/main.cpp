@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
         // parser.printNullable();
         // parser.printFirstSets();
         // parser.printFollowSets();
+        parser.printParsingTable();
         // parser.parse(testProgramFile);
     }
     else {

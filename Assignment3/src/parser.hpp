@@ -200,19 +200,27 @@ public:
         }
     }
 
-    // void printParsingTable() {
-    //     for (const auto& [nonTerminal, row] : parsingTable) {
-    //         cout << nonTerminal << " -> ";
-    //         for (const auto& [terminal, rule] : row) {
-    //             cout << terminal << " -> ";
-    //             for (const auto& symbol : rule.symbols) {
-    //                 cout << symbol << " ";
-    //             }
-    //             cout << "| ";
-    //         }
-    //         cout << endl;
-    //     }
-    // }
+    void printParsingTable() {
+        for (const auto& pair : parsingTable) {
+            const string& nonTerminal = pair.first;
+            auto& row = pair.second;
+            // cout << nonTerminal << " -> ";
+            for (const auto& pair : row) {
+                const string& terminal = pair.first;
+                auto& rule = pair.second;
+                if (rule.symbols.empty()) {
+                    continue;
+                }
+                cout << "(" << terminal << ") ";
+                cout << nonTerminal << " ::= ";
+                for (const auto& symbol : rule.symbols) {
+                    cout << symbol << " ";
+                }
+                cout << endl;
+            }
+            // cout << endl;
+        }
+    }
 
 public:
     int parse(const string& inputProgramFile);
