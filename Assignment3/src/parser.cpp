@@ -190,26 +190,6 @@ void Parser::constructParsingTable() {
             const string& epsilon = "''";
             int length = symbols.size();
 
-            // for (const string& symbol : symbols) {
-
-            //     for (const string& terminal: firstSets[symbol]) {
-            //         if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
-            //             parsingTable[nonTerminal][terminal] = rule;
-            //         }
-            //     }
-
-            //     if (isNullable(symbol)) {
-            //         for (const string& terminal : followSets[nonTerminal]) {
-            //             if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
-            //                 parsingTable[nonTerminal][terminal] = rule;
-            //             }
-            //         }
-            //     }
-            //     else {
-            //         break;
-            //     }
-            // }
-
             for (int i = 0; i < length; ++ i) {
                 const string& symbol = symbols[i];
                 const string& nextSymbol = (i + 1 < length) ? symbols[i + 1] : "";
@@ -232,14 +212,6 @@ void Parser::constructParsingTable() {
                     }
                 }
             }
-            // if (firstSets[symbols[0]].find(epsilon) != firstSets[symbols[0]].end()) {
-            //     cout << nonTerminal << endl;
-            //     for (const string& terminal : followSets[nonTerminal]) {
-            //         if (terminals.find(terminal) != terminals.end() && terminal != epsilon) {
-            //             parsingTable[nonTerminal][terminal] = rule;
-            //         }
-            //     }
-            // }
         }
     }
 }
