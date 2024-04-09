@@ -102,6 +102,8 @@ private:
         addTerminal(terminal_class_to_str(STRINGLITERAL));
         /* Epsilon */
         addTerminal(terminal_class_to_str(EPSILON));
+        /* End */
+        addTerminal(terminal_class_to_str(END));
     }
 
 /* Constructer */

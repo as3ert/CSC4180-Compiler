@@ -63,6 +63,9 @@ std::string terminal_class_to_str(const TerminalClass &terminal_class) {
         case ID:            return "id";
         case INTLITERAL:    return "intliteral";
         case STRINGLITERAL: return "stringliteral";
+        /* Epsilon */
         case EPSILON:       return "''";
+        /* End */
+        case END:           return "$";
     }
 }

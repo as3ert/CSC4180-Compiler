@@ -67,6 +67,8 @@ enum TerminalClass {
     STRINGLITERAL,  // stringliteral
     /* Epsilon */
     EPSILON,        // ''
+    /* End */
+    END,            // $
 };
 
 /**

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         // parser.printNonTerminals();
         // parser.printGrammar();
         // parser.printNullable();
-        parser.printFirstSets();
+        // parser.printFirstSets();
         // parser.printFollowSets();
         // parser.parse(testProgramFile);
     }
