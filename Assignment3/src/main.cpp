@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
         // parser.printNullable();
         // parser.printFirstSets();
         // parser.printFollowSets();
-        parser.printParsingTable();
-        // parser.parse(testProgramFile);
+        // parser.printParsingTable();
+        parser.parse(testProgramFile);
     }
     else {
         cerr << "Usage: " << argv[0] << " <grammar_file> <test_program_file>" << endl;

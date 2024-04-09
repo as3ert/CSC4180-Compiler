@@ -227,5 +227,6 @@ int Parser::parse(const string& inputProgramFile) {
         while (ss >> token) {
             inputTokens.push_back(token);
         }
+
     }
 }
