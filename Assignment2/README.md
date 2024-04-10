@@ -6,6 +6,8 @@
 
 **Date:** Mar 16th, 2024
 
+**Final Grade:** 100/100
+
 ---
 
 ## How did I design and implement the scanner
