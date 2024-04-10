@@ -5,7 +5,7 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: This file implements scanner function defined in scanner.hpp.
+ * Description: This file implements scanner function defined in scanner.hpp
  */
 
 #include "scanner.hpp"

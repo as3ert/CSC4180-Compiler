@@ -6,7 +6,7 @@
  * Student ID: 120090244
  * 
  * Description: This file defines the data structure of DFA, NFA, 
- *              Scanner, and necessary functions for scanning.
+ *              Scanner, and necessary functions for scanning
  */
 
 #ifndef SCANNER_HPP

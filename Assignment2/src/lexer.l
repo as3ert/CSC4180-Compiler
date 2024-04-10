@@ -6,7 +6,7 @@
  * Student ID: 120090244
  * 
  * Description: This file implements some lexical analysis rules to scan the input file 
- *              and return the tokens which will be used later for parser.
+ *              and return the tokens which will be used later for parser
  */
 
 %{
