@@ -76,6 +76,13 @@ enum TerminalClass {
  * @param terminal_class: TerminalClass enum
  * @return: corresponding string for the input terminal class
  */
-std::string terminal_class_to_str(const TerminalClass &terminal_class);
+std::string terminal_class_to_str(const TerminalClass& terminal_class);
+
+/**
+ * Convert Token string into TerminalClass enum
+ * @param terminal_str: string
+ * @return: corresponding TerminalClass enum for the input string
+ */
+TerminalClass token_str_to_class(const std::string& terminal_str);
 
 #endif // TERMINALS_HPP

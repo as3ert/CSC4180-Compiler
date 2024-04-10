@@ -224,9 +224,11 @@ int Parser::parse(const string& inputProgramFile) {
         stringstream ss(line);
         string token;
         vector<string> inputTokens;
-        while (ss >> token) {
-            inputTokens.push_back(token);
-        }
-
+        ss >> token;
+        // cout << terminal_class_to_str(token_str_to_class(token)) << " ";
+        // while (ss >> token) {
+        //     cout << terminal_class_to_str(token_str_to_class(token)) << endl;
+        // }
     }
+    cout << endl;
 }

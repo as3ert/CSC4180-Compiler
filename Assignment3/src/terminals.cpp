@@ -10,7 +10,7 @@
 
 #include "terminals.hpp"
 
-std::string terminal_class_to_str(const TerminalClass &terminal_class) {
+std::string terminal_class_to_str(const TerminalClass& terminal_class) {
     switch(terminal_class) {
         /* Reserved Keywords */
         case GLOBAL:        return "global";
@@ -68,4 +68,52 @@ std::string terminal_class_to_str(const TerminalClass &terminal_class) {
         /* End */
         case END:           return "$";
     }
+}
+
+TerminalClass token_str_to_class(const std::string& str) {
+    if (str == "GLOBAL")        return GLOBAL;
+    if (str == "TINT")          return TINT;
+    if (str == "BOOL")          return TBOOL;
+    if (str == "TSTRING")       return TSTRING;
+    if (str == "NUL")           return NUL;
+    if (str == "TRUE")          return TRUE;
+    if (str == "FLASE")         return FALSE;
+    if (str == "NEW")           return NEW;
+    if (str == "RETURN")        return RETURN;
+    if (str == "FOR")           return FOR;
+    if (str == "WHILE")         return WHILE;
+    if (str == "IF")            return IF;
+    if (str == "ELSE")          return ELSE;
+    if (str == "VAR")           return VAR;
+    if (str == "SEMICOLON")     return SEMICOLON;
+    if (str == "COMMA")         return COMMA;
+    if (str == "LBRACE")        return LBRACE;
+    if (str == "RBRACE")        return RBRACE;
+    if (str == "LPAREN")        return LPAREN;
+    if (str == "RPAREN")        return RPAREN;
+    if (str == "LBRACKET")      return LBRACKET;
+    if (str == "RBRACKET")      return RBRACKET;
+    if (str == "STAR")          return STAR;
+    if (str == "PLUS")          return PLUS;
+    if (str == "MINUS")         return MINUS;
+    if (str == "LSHIFT")        return LSHIFT;
+    if (str == "RLSHIFT")       return RLSHIFT;
+    if (str == "RASHIFT")       return RASHIFT;
+    if (str == "LESS")          return LESS;
+    if (str == "LESSEQ")        return LESSEQ;
+    if (str == "GREAT")         return GREAT;
+    if (str == "GREATEQ")       return GREATEQ;
+    if (str == "EQ")            return EQ;
+    if (str == "NEQ")           return NEQ;
+    if (str == "LAND")          return LAND;
+    if (str == "LOR")           return LOR;
+    if (str == "BAND")          return BAND;
+    if (str == "BOR")           return BOR;
+    if (str == "NOT")           return NOT;
+    if (str == "TLIDE")         return TLIDE;
+    if (str == "ASSIGN")        return ASSIGN;
+    if (str == "ID")            return ID;
+    if (str == "INTLITERAL")    return INTLITERAL;
+    if (str == "STRINGLITERAL") return STRINGLITERAL;
+    if (str == "EOF")           return END;
 }
