@@ -5,7 +5,7 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: 
+ * Description: This file lists TerminalClass enum for each terminal of Oat v.1 Language
  */
 
 #ifndef TERMINALS_HPP
@@ -80,9 +80,16 @@ std::string terminal_class_to_str(const TerminalClass& terminal_class);
 
 /**
  * Convert Token string into TerminalClass enum
- * @param terminal_str: string
+ * @param token_str: string
  * @return: corresponding TerminalClass enum for the input string
  */
-TerminalClass token_str_to_class(const std::string& terminal_str);
+TerminalClass token_str_to_class(const std::string& token_str);
+
+/**
+ * Convert Token string to Terminal string
+ * @param token: Token string
+ * @return: Terminal string
+ */
+std::string token_to_terminal(const std::string& token);
 
 #endif // TERMINALS_HPP

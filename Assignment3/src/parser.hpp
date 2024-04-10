@@ -5,8 +5,10 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: 
+ * Description: This file defines the data structure of TreeNode, 
+ *              ProductionRule, Parser, and necessary functions for parsing
  */
+
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
@@ -16,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <queue>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -23,7 +26,13 @@ using namespace std;
 
 #include "terminals.hpp"
 
-// Data structures to represent grammar
+struct TreeNode {
+    string symbol;
+    vector<TreeNode*> children;
+
+    TreeNode(const string& sym) : symbol(sym) {}
+};
+
 struct ProductionRule {
     string nonTerminal;
     vector<string> symbols;
@@ -39,6 +48,8 @@ private:
     unordered_map<string, unordered_set<string>> followSets;
     unordered_map<string, unordered_map<string, ProductionRule>> parsingTable;
 
+    TreeNode* parsingTreeRoot = nullptr;
+
     bool isNullable(const string& symbol);
     void computeNullableFirstFollowSets();
     void constructParsingTable();
@@ -49,6 +60,9 @@ private:
         terminals.insert(terminalString);
     }
 
+    /**
+     * Add terminals for the Parser
+     */
     void addTerminals() {
         /* Reserved Keywords */
         addTerminal(terminal_class_to_str(GLOBAL));
@@ -107,12 +121,17 @@ private:
         addTerminal(terminal_class_to_str(END));
     }
 
+
+
 /* Constructer */
 public:
     Parser(const string& grammarFile);
 
 /* Debug Only */
 public:
+    /**
+     * Print all terminal symbols
+     */
     void printTerminals() {
         cout << "Print Terminals" << endl;
         for (const auto& terminal : terminals) {
@@ -120,6 +139,9 @@ public:
         }
     }
 
+    /**
+     * Print all non-terminal symbols
+     */
     void printNonTerminals() {
         cout << "Print NonTerminals" << endl;
         for (const auto& nonTerminal : nonTerminals) {
@@ -127,6 +149,9 @@ public:
         }
     }
 
+    /**
+     * Print all grammars read from input file
+     */
     void printGrammar() {
         cout << "Print Grammars" << endl;
         for (const auto& pair : grammar) {
@@ -146,6 +171,9 @@ public:
         }
     }
 
+    /**
+     * Print the Nullable set
+     */
     void printNullable() {
         cout << "Print Nullable" << endl;
         for (const auto& pair : nullable) {
@@ -155,6 +183,9 @@ public:
         }
     }
 
+    /**
+     * Print the FIRST set 
+     */
     void printFirstSets() {
         cout << "Print First sets" << endl;
         for (const auto& pair : firstSets) {
@@ -178,6 +209,9 @@ public:
         }
     }
 
+    /**
+     * Print the FOLLOW set
+     */
     void printFollowSets() {
         cout << "Print Follow sets" << endl;
         for (const auto& pair : followSets) {
@@ -201,7 +235,11 @@ public:
         }
     }
 
+    /**
+     * Print the Parsting Table
+     */
     void printParsingTable() {
+        cout << "Print parsing table" << endl;
         for (const auto& pair : parsingTable) {
             const string& nonTerminal = pair.first;
             auto& row = pair.second;
@@ -219,12 +257,38 @@ public:
                 }
                 cout << endl;
             }
-            // cout << endl;
         }
     }
 
+    /**
+     * Reverse the Parsing Stack for printing
+     */
+    void reverseStack(stack<TreeNode*>& parsingStack) {
+        if (parsingStack.empty()) {
+            return;
+        }
+
+        const string top = parsingStack.top()->symbol;
+        stack<TreeNode*> tempStack = parsingStack;
+        tempStack.pop();
+
+        reverseStack(tempStack);
+
+        cout << top << " ";
+    }
+
+    /**
+     * Print the Parsing Stack
+     */
+    void printStack(stack<TreeNode*>& parsingStack) {
+        reverseStack(parsingStack);
+        cout << endl;
+    }
+
 public:
-    int parse(const string& inputProgramFile);
+    int buildParsingTree(const string& inputProgramFile);
+
+    void printParsingTree(TreeNode* root);
 };
 
 #endif // PARSER_HPP

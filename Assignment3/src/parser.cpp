@@ -5,7 +5,7 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: 
+ * Description: This file implements parser function defined in parser.hpp
  */
 
 #include "parser.hpp"
@@ -216,19 +216,96 @@ void Parser::constructParsingTable() {
     }
 }
 
-int Parser::parse(const string& inputProgramFile) {
+/**
+ * Build parsing tree based on the input tokens
+ * @param inputProgramFile: scanned tokens from a scanner
+ * @return 0 for successs and -1 for failure
+ */
+int Parser::buildParsingTree(const string& inputProgramFile) {
     // Read the input program file and parse its format
     ifstream inputFile(inputProgramFile);
     string line;
-    while (getline(inputFile, line)) {
-        stringstream ss(line);
-        string token;
-        vector<string> inputTokens;
-        ss >> token;
-        // cout << terminal_class_to_str(token_str_to_class(token)) << " ";
-        // while (ss >> token) {
-        //     cout << terminal_class_to_str(token_str_to_class(token)) << endl;
-        // }
+
+    getline(inputFile, line);
+    line += " $";
+    stringstream ss(line);
+    string token;
+    ss >> token;
+
+    TreeNode* start = new TreeNode("S");
+    stack<TreeNode*> parsingStack;
+    parsingStack.push(start);
+
+    while (! parsingStack.empty()) {
+        TreeNode* stackTop = parsingStack.top();
+        const string& stackTopSymbol = stackTop->symbol;
+        if (terminals.find(stackTopSymbol) != terminals.end()) {
+            if (token != stackTopSymbol) {
+                cout << "Error: Terminal mismatch!" << endl;
+                return -1;
+            } else {
+                TreeNode* parentNode = stackTop;
+                parsingStack.pop();
+
+                TreeNode* terminalNode = new TreeNode(stackTopSymbol);
+                if (parsingTreeRoot == nullptr) {
+                    parsingTreeRoot = terminalNode;
+                }
+
+                ss >> token;
+                if (token == "$" && stackTopSymbol == "$") {
+                    cout << "Parsing successful! Print parsing tree" << endl;
+                    printParsingTree(parsingTreeRoot);
+                    return 0;
+                }
+            }
+        } else if (nonTerminals.find(stackTopSymbol) != nonTerminals.end()) {
+            if (parsingTable.find(stackTopSymbol) == parsingTable.end() || 
+                parsingTable[stackTopSymbol].find(token) == parsingTable[stackTopSymbol].end()) {
+                cout << "Error: No production rule found!" << endl;
+                return -1;
+            } else {
+                const ProductionRule& rule = parsingTable[stackTopSymbol][token];
+                TreeNode* parentNode = stackTop;
+                parsingStack.pop();
+                for (int i = rule.symbols.size() - 1; i >= 0; -- i) {
+                    const string& symbol = rule.symbols[i];
+                    TreeNode* childNode = new TreeNode(symbol);
+                    if (symbol != "''") {
+                        parsingStack.push(childNode);
+                    }
+                    // Ignore reserved S and $ symbols
+                    if (symbol != "$" && stackTopSymbol != "$" && stackTopSymbol != "S") {
+                        parentNode->children.push_back(childNode);
+                        if (parsingTreeRoot == nullptr) {
+                            parsingTreeRoot = parentNode;
+                        }
+                    }
+                }
+            }
+        }
     }
-    cout << endl;
+}
+
+/**
+ * Print the parsing tree
+ */
+void Parser::printParsingTree(TreeNode* root) {
+    if (root == nullptr) {
+        return;
+    }
+
+    int length = root->children.size();
+
+    if (length != 0) {
+        cout << root->symbol << " -> ";
+        for (int i = length; i > 0; -- i) {
+            cout << root->children[i - 1]->symbol << " ";
+        }
+        cout << endl;
+    }
+
+    for (int i = length; i > 0; -- i) {
+        printParsingTree(root->children[i - 1]);
+    }
 }

@@ -5,7 +5,8 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: 
+ * Description: This file asks the user to input grammar and tokens
+ *              and constructs a parsing tree
  */
 
 #include "parser.hpp"
@@ -17,6 +18,7 @@ int main(int argc, char* argv[]) {
         string grammarFile = argv[1];
         string testProgramFile = argv[2];
         auto parser = Parser(grammarFile);
+        parser.buildParsingTree(testProgramFile);
         // parser.printTerminals();
         // parser.printNonTerminals();
         // parser.printGrammar();
@@ -24,7 +26,7 @@ int main(int argc, char* argv[]) {
         // parser.printFirstSets();
         // parser.printFollowSets();
         // parser.printParsingTable();
-        parser.parse(testProgramFile);
+        // parser.printParsingTree
     }
     else {
         cerr << "Usage: " << argv[0] << " <grammar_file> <test_program_file>" << endl;

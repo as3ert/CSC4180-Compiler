@@ -5,7 +5,7 @@
  * Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
  * Student ID: 120090244
  * 
- * Description: 
+ * Description: This file implements the functions for TerminalClass enum
  */
 
 #include "terminals.hpp"
@@ -116,4 +116,9 @@ TerminalClass token_str_to_class(const std::string& str) {
     if (str == "INTLITERAL")    return INTLITERAL;
     if (str == "STRINGLITERAL") return STRINGLITERAL;
     if (str == "EOF")           return END;
+}
+
+std::string token_to_terminal(const std::string& token) {
+    TerminalClass terminalClass = token_str_to_class(token);
+    return terminal_class_to_str(terminalClass);
 }
