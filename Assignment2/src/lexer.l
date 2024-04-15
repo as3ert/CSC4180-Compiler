@@ -28,7 +28,7 @@ COMMENT         \/\*([^*]|\*+[^*/])*\*+\/
 GLOBAL          "global"
 TINT            "int"
 TBOOL           "bool"
-TSTRING         "str"
+TSTRING         "string"
 NULL            "null"
 TRUE            "true"
 FALSE           "false"

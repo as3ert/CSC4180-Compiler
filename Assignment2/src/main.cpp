@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]) {
         scanner.add_token("return", RETURN);
         scanner.add_token("int", TINT);
         scanner.add_token("bool", TBOOL);
-        scanner.add_token("str", TSTRING);
+        scanner.add_token("string", TSTRING);
         scanner.add_token("true", TRUE);
         scanner.add_token("false", FALSE);
         /* Punctuations and Brackets */
@@ -70,9 +70,9 @@ int main(int argc, char const *argv[]) {
         scanner.add_integer_token(INTLITERAL);
         scanner.add_string_token(STRINGLITERAL);
         scanner.add_comment_token(COMMENT);
-        scanner.print_nfa();
+        // scanner.print_nfa();
         scanner.NFA_to_DFA();
-        scanner.print_dfa(); 
+        // scanner.print_dfa(); 
         scanner.scan(filename);
     } else {
         std::cout << "Please input the file name of Oat v.1 source program." << std::endl;
