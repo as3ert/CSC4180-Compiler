@@ -1,14 +1,16 @@
-# Copyright (c) 2024 Liu Yuxuan
-# Email: yuxuanliu1@link.cuhk.edu.cn
-#
-# This code is licensed under MIT license (see LICENSE file for details)
-#
-# This code is for teaching purpose of course: CUHKSZ's CSC4180: Compiler Construction
-# as Assignment 4: Oat v.1 Compiler Frontend to LLVM IR using llvmlite
-#
-# Copyright (c)
-# Oat v.1 Language was designed by Prof.Steve Zdancewic when he was teaching CIS 341 at U Penn.
-# 
+'''
+Copyright (c) 2024 Guangxin Zhao <https://github.com/as3ert>
+
+File Created: 17th April 2024
+Author: Guangxin Zhao (120090244@link.cuhk.edu.cn)
+Student ID: 120090244
+
+Description: This code is for teaching purpose of course: CUHKSZ's CSC4180: Compiler Construction
+             as Assignment 4: Oat v.1 Compiler Frontend to LLVM IR using llvmlite
+
+Copyright (c)
+Oat v.1 Language was designed by Prof.Steve Zdancewic when he was teaching CIS 341 at U Penn.
+'''
 
 import sys                          # for CLI argument parsing
 import llvmlite.binding as llvm     # for llvmlite IR generation
@@ -121,11 +123,16 @@ class SymbolTable:
         if len(self.scopes) != len(self.scope_ids):
             raise ValueError("Mismatch size of symbol_table and id_table")
         for table_idx in range(len(self.scopes) - 1, -1, -1):
-            if id in self.scopes[table_idx]:
+            if lexeme in self.scopes[table_idx]: 
                 unique_name = self.unique_name(lexeme, self.scope_ids[table_idx])
                 type = self.scopes[table_idx][lexeme]
                 return unique_name, type
         return None
+    
+    def print_table(self):
+        table_idx = len(self.scopes) - 1
+        for lexeme in self.scopes[table_idx]:
+            print(lexeme)
 
 # Global Symbol Table for Semantic Analysis
 symbol_table = SymbolTable()
@@ -314,49 +321,49 @@ def declare_runtime_functions():
     # map function unique name in global scope to the function body
     # the global scope should have scope_id = 1 
     func = ir.Function(module, func_type, name="array_of_string")
-    ir_map[SymbolTable.unique_name("array_of_string", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "array_of_string", 1)] = func
     # char* string_of_array (int32_t *arr)
     func_type = ir.FunctionType(
         ir.PointerType(ir.IntType(8)),      # return type
         [ir.PointerType(ir.IntType(32))])   # args type
     func = ir.Function(module, func_type, name="string_of_array")
-    ir_map[SymbolTable.unique_name("string_of_array", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "string_of_array", 1)] = func
     # int32_t length_of_string (char *str)
     func_type = ir.FunctionType(
-        ir.IntType(32)                      # return type
+        ir.IntType(32),                     # return type
         [ir.PointerType(ir.IntType(8))])    # args type
     func = ir.Function(module, func_type, name="length_of_string")
-    ir_map[SymbolTable.unique_name("length_of_string", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "length_of_string", 1)] = func
     # char* string_of_int(int32_t i)
     func_type = ir.FunctionType(
         ir.PointerType(ir.IntType(8)),      # return type
         [ir.IntType(32)])                   # args type
     func = ir.Function(module, func_type, name="string_of_int")
-    ir_map[SymbolTable.unique_name("string_of_int", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "string_of_int", 1)] = func
     # char* string_cat(char* l, char* r)
     func_type = ir.FunctionType(
         ir.PointerType(ir.IntType(8)),      # return tyoe
         [ir.PointerType(ir.IntType(8)), ir.PointerType(ir.IntType(8))]) # args type
     func = ir.Function(module, func_type, name="string_cat")
-    ir_map[SymbolTable.unique_name("string_cat", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "string_cat", 1)] = func
     # void print_string (char* str)
     func_type = ir.FunctionType(
         ir.VoidType(),                      # return type
         [ir.PointerType(ir.IntType(8))])    # args type
     func = ir.Function(module, func_type, name="print_string")
-    ir_map[SymbolTable.unique_name("print_string", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "print_string", 1)] = func
     # void print_int (int32_t i)
     func_type = ir.FunctionType(
         ir.VoidType(),                      # return type
         [ir.IntType(32)])                   # args type
     func = ir.Function(module, func_type, name="print_int")
-    ir_map[SymbolTable.unique_name("print_int", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "print_int", 1)] = func
     # void print_bool (int32_t i)
     func_type = ir.FunctionType(
         ir.VoidType(),                      # return type
         [ir.IntType(32)])                   # args type
     func = ir.Function(module, func_type, name="print_bool")
-    ir_map[SymbolTable.unique_name("print_bool", 1)] = func
+    ir_map[SymbolTable.unique_name(symbol_table, "print_bool", 1)] = func
 
 def codegen(node):
     """
@@ -371,13 +378,14 @@ def codegen(node):
     """
     codegen_func_map = {
         NodeType.GLOBAL_DECL: codegen_handler_global_decl,
-        # TODO: add more mappings from NodeType to its handler function of IR generation
+        NodeType.VAR_DECL: codegen_handler_variable_decl,
+        NodeType.FUNC_DECL: codegen_handler_function_decl,
     }
     codegen_func = codegen_func_map.get(node.nodetype)
     if codegen_func:
         codegen_func(node)
     else:
-        default_handler(node)
+        codegen_handler_default(node)
 
 # Some sample handler functions for IR codegen
 # TODO: implement more handler functions for various node types
@@ -395,6 +403,36 @@ def codegen_handler_global_decl(node):
     variable.global_constant = True
     variable.initializer = ir.Constant(ir_type(node.datatype))
 
+def codegen_handler_variable_decl(node):
+    """
+    Local variable declaration
+    """
+
+def codegen_handler_function_decl(node):
+    """
+    Function declaration
+    """
+    info = node.children[1]
+    name = info.lexeme
+    func_type = info.datatype
+    args = node.children[2]
+
+    return_type = ir_type(func_type)
+    arg_types = []
+
+    for arg in args.children:
+        arg_types.append(ir_type(arg.datatype))
+
+    ftype = ir.FunctionType(
+        return_type,
+        arg_types
+    )
+
+    func = ir.Function(module, ftype, name)
+    for i in range(len(args.children)):
+        arg_name = args.children[i].lexeme
+        func.args[i].name = arg_name
+
 def semantic_analysis(node):
     """
     Perform semantic analysis on the root_node of AST
@@ -407,6 +445,11 @@ def semantic_analysis(node):
     """
     handler_map = {
         NodeType.PROGRAM: semantic_handler_program,
+        NodeType.GLOBAL_DECL: semantic_handler_global_decl,
+        NodeType.VAR_DECL: semantic_handler_variable_decl,
+        NodeType.FUNC_DECL: semantic_handler_function_decl,
+        NodeType.RETURN: semantic_handler_return,
+
         NodeType.ID: semantic_handler_id,
         NodeType.TINT: semantic_handler_int,
         NodeType.TBOOL: semantic_handler_bool,
@@ -415,7 +458,9 @@ def semantic_analysis(node):
         NodeType.STRINGLITERAL: semantic_handler_string,
         NodeType.TRUE: semantic_handler_bool,
         NodeType.FALSE: semantic_handler_bool,
-        # TODO: add more mapping from NodeType to its corresponding handler functions here
+        NodeType.ARGS:semantic_handler_void,
+
+        NodeType.STMTS: semantic_handler_statements,
     }
     handler = handler_map.get(node.nodetype)
     if handler:
@@ -440,8 +485,66 @@ def semantic_handler_program(node):
         semantic_analysis(child)
     symbol_table.pop_scope()
 
+def semantic_handler_global_decl(node):
+    # Do semantic analysis on the right hand side of the asssignment operation
+    semantic_analysis(node.children[1])
+
+    # Insert lexeme and data type for the global declaration
+    symbol_table.insert(node.children[0].lexeme, node.children[1].datatype)
+
+    # Do semantic analysis on the left hand side of the assignment operation
+    semantic_analysis(node.children[0]) 
+
+def semantic_handler_variable_decl(node):
+    # Do semantic analysis on the right hand side of the asssignment operation
+    semantic_analysis(node.children[1])
+
+    # Insert lexeme and data type for the local declaration
+    symbol_table.insert(node.children[0].lexeme, node.children[1].datatype)
+
+    # Do semantic analysis on the left hand side of the assignment operation
+    semantic_analysis(node.children[0]) 
+
+def semantic_handler_variable_decl(node):
+    # Do semantic analysis on the right hand side of the asssignment operation
+    semantic_analysis(node.children[1])
+
+    local_var = node.children[0]
+    lexeme = local_var.lexeme
+    data_type = node.children[1].datatype
+
+    symbol_table.insert(lexeme, data_type)
+    if symbol_table.lookup_local(lexeme) is None:
+        raise ValueError("Variable not defined: ", lexeme)
+    else:
+        local_var.id, local_var.datatype = symbol_table.lookup_local(lexeme)
+    
+def semantic_handler_function_decl(node):
+    # Do semantic analysis on the type definition
+    semantic_analysis(node.children[0])
+
+    # Insert lexeme and data type for the function declaration
+    symbol_table.insert(node.children[1].lexeme, node.children[0].datatype)
+    
+    # Create new scope for local variables
+    symbol_table.push_scope()
+
+    for child in node.children:
+        semantic_analysis(child)
+
+    symbol_table.pop_scope()
+
+def semantic_handler_return(node):
+    for child in node.children:
+        semantic_analysis(child)
+        node.datatype = child.datatype
+
+def semantic_handler_statements(node):
+    for child in node.children:
+        semantic_analysis(child)
+        node.datatype = child.datatype
+
 # Some Sample handler functions
-# TODO: define more hanlder functions for various node types
 def semantic_handler_id(node):
     if symbol_table.lookup_global(node.lexeme) is None:
         raise ValueError("Variable not defined: ", node.lexeme)
@@ -456,6 +559,9 @@ def semantic_handler_bool(node):
 
 def semantic_handler_string(node):
     node.datatype = DataType.STRING
+
+def semantic_handler_void(node):
+    node.datatype = DataType.VOID
 
 def default_handler(node):
     for child in node.children:
@@ -476,14 +582,14 @@ elif len(sys.argv) == 4:
     root_node = construct_tree_from_dot(dot_path)
     semantic_analysis(root_node)
     visualize_tree(root_node, ast_png_after_semantics_analysis)
-    ## Uncomment the following when you are trying the do IR generation
-    # # init llvm
-    # llvm.initialize()
-    # llvm.initialize_native_target()
-    # llvm.initialize_native_asmprinter()
-    # declare_runtime_functions()
-    # codegen(root_node)
-    # # print LLVM IR
-    # print(module)
+    # Uncomment the following when you are trying the do IR generation
+    # init llvm
+    llvm.initialize()
+    llvm.initialize_native_target()
+    llvm.initialize_native_asmprinter()
+    declare_runtime_functions()
+    codegen(root_node)
+    # print LLVM IR
+    print(module)
 else:
     raise SyntaxError("Usage: python3 a4.py <.dot> <.png before>\nUsage: python3 ./a4.py <.dot> <.png after> <.ll>")
