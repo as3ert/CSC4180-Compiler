@@ -19,6 +19,8 @@ import pydot                        # for .dot file parsing
 from enum import Enum               # for enum in python
 
 DEBUG = False
+scope_id = 1
+temp_cnt = 1
 
 class SymbolTable:
     """
@@ -300,6 +302,7 @@ def ir_type(data_type, array_size = 1):
         DataType.INT: ir.IntType(32),       # integer is in 32-bit
         DataType.BOOL: ir.IntType(32),      # bool is also in 32-bit, 0 for false and 1 for True
         DataType.STRING: ir.ArrayType(ir.IntType(8), array_size + 1),   # extra \0 (null terminator)
+        # DataType.STRING: [ir.ArrayType(ir.IntType(8), array_size + 1), ir.IntType(8)],   # extra \0 (null terminator)
         DataType.INT_ARRAY: ir.ArrayType(ir.IntType(32), array_size),
         DataType.BOOL_ARRAY: ir.ArrayType(ir.IntType(32), array_size),
         DataType.STRING_ARRAY: ir.ArrayType(ir.ArrayType(ir.IntType(8), 32), array_size),   # string max size = 32 for string array 
@@ -378,8 +381,11 @@ def codegen(node):
     """
     codegen_func_map = {
         NodeType.GLOBAL_DECL: codegen_handler_global_decl,
-        NodeType.VAR_DECL: codegen_handler_variable_decl,
         NodeType.FUNC_DECL: codegen_handler_function_decl,
+        NodeType.VAR_DECL: codegen_handler_variable_decl,
+        NodeType.FUNC_CALL: codegen_handler_function_call,
+        NodeType.RETURN: codegen_handler_return,
+        NodeType.ASSIGN: codegen_handler_assign,
     }
     codegen_func = codegen_func_map.get(node.nodetype)
     if codegen_func:
@@ -388,7 +394,6 @@ def codegen(node):
         codegen_handler_default(node)
 
 # Some sample handler functions for IR codegen
-# TODO: implement more handler functions for various node types
 def codegen_handler_default(node):
     for child in node.children:
         codegen(child)
@@ -397,25 +402,32 @@ def codegen_handler_global_decl(node):
     """
     Global variable declaration
     """
-    var_name = node.children[0].lexeme
-    variable = ir.GlobalVariable(module, typ=ir_type(node.datatype), name=var_name)
+    global scope_id
+
+    var = node.children[0]
+    var_name = var.lexeme
+    var_type = ir_type(var.datatype)
+    var_value = int(node.children[1].lexeme)
+    variable = ir.GlobalVariable(module, var_type, var_name)
     variable.linkage = "private"
     variable.global_constant = True
-    variable.initializer = ir.Constant(ir_type(node.datatype))
+    variable.initializer = ir.Constant(var_type, var_value)
 
-def codegen_handler_variable_decl(node):
-    """
-    Local variable declaration
-    """
+    ir_map[SymbolTable.unique_name(symbol_table, var_name, scope_id)] = variable
 
 def codegen_handler_function_decl(node):
     """
     Function declaration
     """
+    global scope_id, block
+
+    type = node.children[0]
     info = node.children[1]
-    name = info.lexeme
-    func_type = info.datatype
     args = node.children[2]
+    stmt = node.children[3]
+
+    name = info.lexeme
+    func_type = type.datatype
 
     return_type = ir_type(func_type)
     arg_types = []
@@ -429,9 +441,192 @@ def codegen_handler_function_decl(node):
     )
 
     func = ir.Function(module, ftype, name)
+
     for i in range(len(args.children)):
         arg_name = args.children[i].lexeme
         func.args[i].name = arg_name
+    
+    ir_map[SymbolTable.unique_name(symbol_table, name, scope_id)] = func
+
+    block = func.append_basic_block(name="entry")
+    builder.position_at_end(block)
+
+    scope_id += 1
+
+    codegen(stmt)
+
+    scope_id -= 1
+
+def codegen_handler_variable_decl(node):
+    """
+    Local variable declaration
+    """
+    global scope_id
+
+    id = node.children[0]
+    rval = node.children[1]
+
+    type = id.datatype
+    name = id.lexeme
+    lexeme = rval.lexeme
+
+    typ = ir_type(type, len(lexeme))
+
+    rval_content = lexeme
+    if (type == DataType.INT or 
+        type == DataType.BOOL):
+        rval_content = int(lexeme)
+    elif type == DataType.STRING:
+        rval_content = rval_content + "\0"
+        str_ptr = ir.Constant(typ, bytearray(rval_content, "utf-8"))
+
+    var_ptr = builder.alloca(typ, name=name)
+
+    if type == DataType.STRING:
+        builder.store(str_ptr, var_ptr)
+    else:
+        var_cst = ir.Constant(typ, rval_content)
+        builder.store(var_cst, var_ptr)
+
+    ir_map[SymbolTable.unique_name(symbol_table, name, scope_id)] = var_ptr
+
+def codegen_handler_function_call(node):
+    """
+    Function call
+    """
+    global scope_id, temp_cnt
+
+    func_name = node.children[0]
+    func_args = node.children[1]
+
+    func = func_name.lexeme
+    
+    # Functions are always in scope 1
+    fn = ir_map[SymbolTable.unique_name(symbol_table, func, 1)]
+
+    args_ptr = []
+
+    for arg in func_args.children:
+        try:
+            arg_local = ir_map[SymbolTable.unique_name(symbol_table, arg.lexeme, scope_id)]
+        except:
+            arg_local = ir_map[SymbolTable.unique_name(symbol_table, arg.lexeme, scope_id - 1)]
+        
+        args_ptr.append(arg_local)
+
+    args = []
+
+    for i in range(len(args_ptr)):
+        if args_ptr[i].type.pointee == ir.IntType(32):
+            args.append(builder.load(args_ptr[i], str(temp_cnt)))
+            temp_cnt += 1
+        elif args_ptr[i].type.pointee != ir.IntType(8):
+            ptr = builder.gep(args_ptr[i], [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), 0)])
+            args.append(ptr)
+
+    try:
+        builder.call(fn, args)
+    except:
+        builder.call(fn, args_ptr)
+
+def codegen_handler_return(node):
+    """
+    Return statement
+    """
+    global scope_id, temp_cnt
+
+    val = node.children[0]
+
+    val_local = ir.Constant(ir.IntType(32), 0)
+
+    if val.nodetype != NodeType.INTLITERAL:
+        try:
+            val_local = ir_map[SymbolTable.unique_name(symbol_table, val.lexeme, scope_id)]
+        except:
+            val_local = ir_map[SymbolTable.unique_name(symbol_table, val.lexeme, scope_id - 1)]
+    else:
+        val_local = ir.Constant(ir.IntType(32), int(val.lexeme))
+
+    val_loaded = val_local
+
+    if (val.nodetype == NodeType.ID):
+        val_loaded = builder.load(val_local, str(temp_cnt))
+        temp_cnt += 1
+
+    builder.ret(val_loaded)
+
+def codegen_handler_plus(node):
+    """
+    Plus operation
+    """
+    global temp_cnt
+
+    children = []
+
+    for child in node.children:
+        if child.nodetype == NodeType.ID:
+            var_loaded = builder.load(ir_map[SymbolTable.unique_name(symbol_table, child.lexeme, scope_id)], str(temp_cnt))
+            temp_cnt += 1
+        else:
+            var_loaded = ir.Constant(ir.IntType(32), int(child.lexeme))
+        
+        children.append(var_loaded)
+
+    result = builder.add(children[0], children[1], str(temp_cnt))
+    temp_cnt += 1
+
+    return result
+
+def codegen_handler_minus(node):
+    """
+    Minus operation
+    """
+    global temp_cnt
+
+    children = []
+
+    for child in node.children:
+        if child.nodetype == NodeType.ID:
+            var_loaded = builder.load(ir_map[SymbolTable.unique_name(symbol_table, child.lexeme, scope_id)], str(temp_cnt))
+            temp_cnt += 1
+        else:
+            var_loaded = ir.Constant(ir.IntType(32), int(child.lexeme))
+        
+        children.append(var_loaded)
+
+    result = builder.sub(children[0], children[1], str(temp_cnt))
+    temp_cnt += 1
+
+    return result
+
+def codegen_handler_assign(node):
+    """
+    Assignment operation
+    """
+    global scope_id, temp_cnt
+
+    lval = node.children[0]
+    rval = node.children[1]
+
+    lval_local = ir_map[SymbolTable.unique_name(symbol_table, lval.lexeme, scope_id)]
+
+    rval_local = ir.Constant(ir.IntType(32), 0)
+
+    if rval.nodetype == NodeType.INTLITERAL:
+        rval_local = ir.Constant(ir.IntType(32), int(rval.lexeme))
+    elif rval.nodetype == NodeType.ID:
+        try:
+            rval_local = ir_map[SymbolTable.unique_name(symbol_table, rval.lexeme, scope_id)]
+        except:
+            rval_local = ir_map[SymbolTable.unique_name(symbol_table, rval.lexeme, scope_id - 1)]
+        rval_local = builder.load(rval_local, str(temp_cnt))
+        temp_cnt += 1
+    elif rval.nodetype == NodeType.PLUS:
+        rval_local = codegen_handler_plus(rval)
+    elif rval.nodetype == NodeType.MINUS:
+        rval_local = codegen_handler_minus(rval)
+
+    builder.store(rval_local, lval_local)
 
 def semantic_analysis(node):
     """
@@ -582,14 +777,17 @@ elif len(sys.argv) == 4:
     root_node = construct_tree_from_dot(dot_path)
     semantic_analysis(root_node)
     visualize_tree(root_node, ast_png_after_semantics_analysis)
-    # Uncomment the following when you are trying the do IR generation
-    # init llvm
-    llvm.initialize()
-    llvm.initialize_native_target()
-    llvm.initialize_native_asmprinter()
-    declare_runtime_functions()
-    codegen(root_node)
-    # print LLVM IR
-    print(module)
+    # # Uncomment the following when you are trying the do IR generation
+    # # init llvm
+    # llvm.initialize()
+    # llvm.initialize_native_target()
+    # llvm.initialize_native_asmprinter()
+    # declare_runtime_functions()
+    # codegen(root_node)
+    # # print LLVM IR
+    # print(module)
+    # # Save module into LLVM IR
+    # with open(llvm_ir, "w") as file:
+    #     file.write(str(module))
 else:
     raise SyntaxError("Usage: python3 a4.py <.dot> <.png before>\nUsage: python3 ./a4.py <.dot> <.png after> <.ll>")
