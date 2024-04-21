@@ -302,7 +302,6 @@ def ir_type(data_type, array_size = 1):
         DataType.INT: ir.IntType(32),       # integer is in 32-bit
         DataType.BOOL: ir.IntType(32),      # bool is also in 32-bit, 0 for false and 1 for True
         DataType.STRING: ir.ArrayType(ir.IntType(8), array_size + 1),   # extra \0 (null terminator)
-        # DataType.STRING: [ir.ArrayType(ir.IntType(8), array_size + 1), ir.IntType(8)],   # extra \0 (null terminator)
         DataType.INT_ARRAY: ir.ArrayType(ir.IntType(32), array_size),
         DataType.BOOL_ARRAY: ir.ArrayType(ir.IntType(32), array_size),
         DataType.STRING_ARRAY: ir.ArrayType(ir.ArrayType(ir.IntType(8), 32), array_size),   # string max size = 32 for string array 
@@ -656,6 +655,7 @@ def semantic_analysis(node):
         NodeType.ARGS:semantic_handler_void,
 
         NodeType.STMTS: semantic_handler_statements,
+        # NodeType.IF_STMT: 
     }
     handler = handler_map.get(node.nodetype)
     if handler:
