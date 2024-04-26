@@ -29,7 +29,7 @@ for test_idx in {0..5}; do
     python3 ../src/a4.py ${parser_ast_dot} ${ast_png_after_semantic_analysis} ${self_ir}
     ## Uncomment the following after you finish output the LLVM IR
     # Combine LLVM IR of source program and runtime functions into one merged IR file
-    llvm-link ${self_ir} runtime.ll -o ${merged_ir}
+    llvm-link ${self_ir} ../src/runtime.ll -o ${merged_ir}
     llc -march=riscv64 ${merged_ir} -o ${assembly}
     riscv64-unknown-linux-gnu-gcc ${assembly} -o ${exe}
     qemu-riscv64 -L /opt/riscv/sysroot ${exe} > ${output}
