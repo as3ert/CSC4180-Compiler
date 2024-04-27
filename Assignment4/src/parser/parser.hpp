@@ -26,12 +26,40 @@ using namespace std;
 
 #include "terminals.hpp"
 
-struct TreeNode {
-    string symbol;
-    vector<TreeNode*> children;
+// struct TreeNode {
+//     string symbol;
+//     vector<TreeNode*> children;
 
-    TreeNode(const string& sym) : symbol(sym) {}
+//     TreeNode(const string& sym) : symbol(sym) {}
+// };
+
+class TreeNode {
+public:
+    std::string symbol;
+    std::string nodetype;
+    std::string lexeme;
+    std::vector<TreeNode*> children;
+
+    // TreeNode(std::string sym, std::string typ, std::string lex = "") : symbol(sym), nodetype(typ), lexeme(lex) {}
+    TreeNode(std::string sym) : symbol(sym) {}
+
+    ~TreeNode() {
+        for (auto child : children) {
+            delete child;
+        }
+    }
+
+    // void generateDot(std::ostream& out, int& nodeCount) const {
+    //     int currentNode = nodeCount ++;
+    //     out << "node" << currentNode << " [label=\"<" << nodetype << ">\",lexeme=\"" << lexeme << "\"];\n";
+    //     for (auto child : children) {
+    //         int childNode = nodeCount;
+    //         child->generateDot(out, nodeCount);
+    //         out << "node" << currentNode << " -> node" << childNode << ";\n";
+    //     }
+    // }
 };
+
 
 struct ProductionRule {
     string nonTerminal;
@@ -287,8 +315,8 @@ public:
 
 public:
     int buildParsingTree(const string& inputProgramFile);
-
     void printParsingTree(TreeNode* root);
+    void generateDotFile(const std::string& outputFilename) const;
 };
 
 #endif // PARSER_HPP

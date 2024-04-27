@@ -71,6 +71,26 @@ enum TerminalClass {
     END,            // $
 };
 
+// enum KeptSymbol {
+//     PROGRAM,
+//     GLOBAL_DECL,
+//     FUNC_DECL,
+//     VAR_DECL,
+//     FUNC_CALL,
+//     ARGS,
+//     IF_STMT,
+//     ELSE_STMT,
+//     STMTS,
+//     EXPS,
+//     INT,
+//     SASSIGN,
+//     SID,
+//     SSTRINGLITERAL,
+//     RETURN,
+//     SASSIGN,
+//     BOP,
+// };
+
 /**
  * Convert TerminalClass enum into string
  * @param terminal_class: TerminalClass enum
@@ -91,5 +111,14 @@ TerminalClass token_str_to_class(const std::string& token_str);
  * @return: Terminal string
  */
 std::string token_to_terminal(const std::string& token);
+
+/**
+ * Check if the input string should be kept in dot file
+ * @param str: input string
+ * @return: true if the input string should be kept in dot file, false otherwise
+ */
+bool terminal_should_keep_in_dot(const std::string& str);
+
+bool symbol_should_keep_in_dot();
 
 #endif // TERMINALS_HPP

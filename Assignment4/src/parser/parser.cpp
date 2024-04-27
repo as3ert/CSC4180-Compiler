@@ -10,6 +10,9 @@
 
 #include "parser.hpp"
 
+queue<string> nodetypeQueue;
+queue<string> lexemeQueue;
+
 /**
  * Given a grammar file, construct a parser object
  * @param grammarFile the file containing the grammar
@@ -218,26 +221,32 @@ void Parser::constructParsingTable() {
 
 /**
  * Build parsing tree based on the input tokens
- * @param inputProgramFile: scanned tokens from a scanner
+ * @param inputTokenFile: scanned tokens from a scanner
  * @return 0 for successs and -1 for failure
  */
-int Parser::buildParsingTree(const string& inputProgramFile) {
-    // Read the input program file and parse its format
-    ifstream inputFile(inputProgramFile);
+int Parser::buildParsingTree(const string& inputTokenFile) {
+    // Read the input token file and parse its format
+    ifstream inputFile(inputTokenFile);
     string line;
 
     getline(inputFile, line);
-    line += " $";
     stringstream ss(line);
+    string nodetype;
+    string lexeme;
     string token;
-    ss >> token;
+    ss >> nodetype >> lexeme;
+    token = token_to_terminal(nodetype);
 
+    nodetypeQueue.push(nodetype);
+    lexemeQueue.push(lexeme);
+    
     TreeNode* start = new TreeNode("S");
     stack<TreeNode*> parsingStack;
     parsingStack.push(start);
 
     while (! parsingStack.empty()) {
         TreeNode* stackTop = parsingStack.top();
+        string token = token_to_terminal(nodetype);
         const string& stackTopSymbol = stackTop->symbol;
         if (terminals.find(stackTopSymbol) != terminals.end()) {
             if (token != stackTopSymbol) {
@@ -252,7 +261,19 @@ int Parser::buildParsingTree(const string& inputProgramFile) {
                     parsingTreeRoot = terminalNode;
                 }
 
-                ss >> token;
+                getline(inputFile, line);
+                stringstream ss(line);
+
+                if (line.empty()) {
+                    token = "$";
+                } else {
+                    ss >> nodetype >> lexeme;
+                    token = token_to_terminal(nodetype);
+
+                    nodetypeQueue.push(nodetype);
+                    lexemeQueue.push(lexeme);
+                }
+
                 if (token == "$" && stackTopSymbol == "$") {
                     cout << "Parsing successful! Print parsing tree" << endl;
                     printParsingTree(parsingTreeRoot);
