@@ -179,7 +179,7 @@ public:
     Scanner();
 
 public:
-    int scan(std::string &filename);
+    int scan(std::string &filename, std::string &output_filename);
 
     void add_token(std::string token_str, TokenClass token_class, unsigned int precedence = 100);
 

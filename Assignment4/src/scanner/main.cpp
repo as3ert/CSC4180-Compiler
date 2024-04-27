@@ -20,8 +20,9 @@ unsigned int DFA::State::increment_id = 1;
 unsigned int NFA::State::increment_id = 1;
 
 int main(int argc, char const *argv[]) {
-    if (argc == 2) {
-        std::string filename = argv[1];
+    if (argc == 3) {
+        std::string ast_file = argv[1];
+        std::string token_file = argv[2];
         auto scanner = Scanner();
         /* Reserved Keywords Tokens */
         scanner.add_token("for", FOR);
@@ -73,9 +74,9 @@ int main(int argc, char const *argv[]) {
         // scanner.print_nfa();
         scanner.NFA_to_DFA();
         // scanner.print_dfa(); 
-        scanner.scan(filename);
+        scanner.scan(ast_file, token_file);
     } else {
-        std::cout << "Please input the file name of Oat v.1 source program." << std::endl;
+        std::cout << "Usage: " << argv[0] << " <.ast> <.txt>" << std::endl;
     }
 
     return 0;

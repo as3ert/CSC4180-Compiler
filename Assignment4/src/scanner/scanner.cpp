@@ -367,15 +367,21 @@ Scanner::Scanner() {
 }
 
 /**
- * Given a filename of a source program, print all the tokens of it
- * @param {string} filename
+ * Given a filename of a source program and a destination file for tokens, print all the tokens of it
+ * @param {string} filename - the source file containing the code to scan
+ * @param {string} output_filename - the destination file where tokens will be written
  * @return 0 for success, -1 for failure
- */ 
-int Scanner::scan(std::string &filename) {
+ */
+int Scanner::scan(std::string &filename, std::string &output_filename) {
     std::ifstream file(filename);
-
     if (!file.is_open()) {
         std::cerr << "Error: cannot open file " << filename << std::endl;
+        return -1;
+    }
+
+    std::ofstream output_file(output_filename);
+    if (!output_file.is_open()) {
+        std::cerr << "Error: cannot open output file " << output_filename << std::endl;
         return -1;
     }
 
@@ -385,22 +391,19 @@ int Scanner::scan(std::string &filename) {
     file.close();
 
     std::string token = "";
-
     DFA::State* state = dfa->states[0];
-
     bool string_flag = false;
     bool comment_flag = false;
 
-    for (int i = 0; i < program.size(); i ++) {
+    for (size_t i = 0; i < program.size(); i++) {
         char c = program[i];
-
         std::string temp_token = token + c;
-        
+
         if (c == '"') {
-            string_flag = ! string_flag;
+            string_flag = !string_flag;
         }
 
-        if (! string_flag && c == ' ' || c == '\n') {
+        if (!string_flag && (c == ' ' || c == '\n')) {
             continue;
         }
 
@@ -408,10 +411,8 @@ int Scanner::scan(std::string &filename) {
 
         if (temp_token == "/*") {
             comment_flag = true;
-        } else if (temp_token.length() > 1) {
-            if (temp_token.substr(temp_token.length() - 2) == "*/") {
-                comment_flag = false;
-            }
+        } else if (temp_token.length() > 1 && temp_token.substr(temp_token.length() - 2) == "*/") {
+            comment_flag = false;
         }
 
         if (comment_flag) {
@@ -423,35 +424,32 @@ int Scanner::scan(std::string &filename) {
             state = it->second;
 
             if (state->accepted) {
-                for (int j = i + 1; j < program.size(); j ++) {
+                for (size_t j = i + 1; j < program.size(); j++) {
                     char remain_c = program[j];
-
                     auto remain_it = state->transition.find(remain_c);
-
                     if (remain_it == state->transition.end()) {
                         break;
                     }
-                    
                     i = j;
-
                     state = remain_it->second;
                     token += remain_c;
                 }
             }
         } else {
-            i --;
+            i--;
             state = dfa->states[0];
             token.clear();
         }
 
         if (state->accepted) {
-            std::cout << token_class_to_str(state->token_class) << " " << token << std::endl;
+            output_file << token_class_to_str(state->token_class) << " " << token << std::endl;
             state = dfa->states[0];
             token.clear();
         }
     }
 
-    std::cout << "EOF" << std::endl;
+    output_file << "EOF" << std::endl;
+    output_file.close();
 
     return 0;
 }
