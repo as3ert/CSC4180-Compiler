@@ -112,13 +112,4 @@ TerminalClass token_str_to_class(const std::string& token_str);
  */
 std::string token_to_terminal(const std::string& token);
 
-/**
- * Check if the input string should be kept in dot file
- * @param str: input string
- * @return: true if the input string should be kept in dot file, false otherwise
- */
-bool terminal_should_keep_in_dot(const std::string& str);
-
-bool symbol_should_keep_in_dot();
-
 #endif // TERMINALS_HPP

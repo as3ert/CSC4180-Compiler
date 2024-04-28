@@ -77,7 +77,7 @@ TerminalClass token_str_to_class(const std::string& str) {
     if (str == "TSTRING")       return TSTRING;
     if (str == "NUL")           return NUL;
     if (str == "TRUE")          return TRUE;
-    if (str == "FLASE")         return FALSE;
+    if (str == "FALSE")         return FALSE;
     if (str == "NEW")           return NEW;
     if (str == "RETURN")        return RETURN;
     if (str == "FOR")           return FOR;
@@ -117,36 +117,6 @@ TerminalClass token_str_to_class(const std::string& str) {
     if (str == "STRINGLITERAL") return STRINGLITERAL;
     if (str == "EOF")           return END;
 }
-
-// KeptSymbol symbol_str_to_class(const std::string& str) {
-//     if (str == "prog")          return PROGRAM;
-//     if (str == "fdecl")         return FUNC_DECL;
-//     if (str == "int")           return INT;
-//     if (str == "id")            return SID;
-//     if (str == "args")          return ARGS;
-//     if (str == "stmts")         return STMTS;
-//     if (str == "var_decl")      return VAR_DECL;
-//     if (str == "stringliteral") return SSTRINGLITERAL;
-//     if (str == "func_call")     return FUNC_CALL;
-//     if (str == "exps")          return EXPS;
-//     if (str == "return")        return RETURN;
-//     if (str == "assign")        return SASSIGN;
-//     if (str == "bop")           return BOP;
-//     if (str == "")
-// }
-
-// bool symbol_should_keep_in_dot(const std::string& str) {
-//     TerminalClass terminal_class = token_str_to_class(str);
-
-//     switch (terminal_class) {
-//         case ID:
-//         case INTLITERAL:
-//         case STRINGLITERAL:
-//             return true;
-//         default:
-//             return false;
-//     }
-// }
 
 std::string token_to_terminal(const std::string& token) {
     TerminalClass terminalClass = token_str_to_class(token);

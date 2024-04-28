@@ -10,9 +10,6 @@
 
 #include "parser.hpp"
 
-queue<string> nodetypeQueue;
-queue<string> lexemeQueue;
-
 /**
  * Given a grammar file, construct a parser object
  * @param grammarFile the file containing the grammar
@@ -234,11 +231,10 @@ int Parser::buildParsingTree(const string& inputTokenFile) {
     string nodetype;
     string lexeme;
     string token;
-    ss >> nodetype >> lexeme;
+    ss >> nodetype;
+    getline(ss, lexeme);
+    lexeme = lexeme.substr(1, lexeme.size());
     token = token_to_terminal(nodetype);
-
-    nodetypeQueue.push(nodetype);
-    lexemeQueue.push(lexeme);
     
     TreeNode* start = new TreeNode("S");
     stack<TreeNode*> parsingStack;
@@ -267,16 +263,14 @@ int Parser::buildParsingTree(const string& inputTokenFile) {
                 if (line.empty()) {
                     token = "$";
                 } else {
-                    ss >> nodetype >> lexeme;
+                    ss >> nodetype;
+                    getline(ss, lexeme);
+                    lexeme = lexeme.substr(1, lexeme.size());
                     token = token_to_terminal(nodetype);
-
-                    nodetypeQueue.push(nodetype);
-                    lexemeQueue.push(lexeme);
                 }
 
                 if (token == "$" && stackTopSymbol == "$") {
-                    cout << "Parsing successful! Print parsing tree" << endl;
-                    printParsingTree(parsingTreeRoot);
+                    // cout << "Parsing successful! Generate parsing tree" << endl;
                     return 0;
                 }
             }
@@ -311,22 +305,21 @@ int Parser::buildParsingTree(const string& inputTokenFile) {
 /**
  * Print the parsing tree
  */
-void Parser::printParsingTree(TreeNode* root) {
+void Parser::printParsingTree(TreeNode* root, ostream& outStream) {
     if (root == nullptr) {
         return;
     }
 
     int length = root->children.size();
-
     if (length != 0) {
-        cout << root->symbol << " -> ";
+        outStream << root->symbol << " -> ";
         for (int i = length; i > 0; -- i) {
-            cout << root->children[i - 1]->symbol << " ";
+            outStream << root->children[i - 1]->symbol << " ";
         }
-        cout << endl;
+        outStream << endl;
     }
 
     for (int i = length; i > 0; -- i) {
-        printParsingTree(root->children[i - 1]);
+        printParsingTree(root->children[i - 1], outStream);
     }
 }

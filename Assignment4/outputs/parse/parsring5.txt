@@ -1,0 +1,79 @@
+prog -> decl prog 
+decl -> fdecl 
+fdecl -> t id ( args ) block 
+t -> primary_t t_arr 
+primary_t -> int 
+t_arr -> '' 
+args -> '' 
+block -> { stmts } 
+stmts -> stmt stmts 
+stmt -> vdecl ; 
+vdecl -> var id = exp 
+exp -> term exp' 
+term -> primary 
+primary -> intliteral 
+exp' -> '' 
+stmts -> stmt stmts 
+stmt -> while ( exp ) block 
+exp -> term exp' 
+term -> primary 
+primary -> id func_call arr_idx 
+func_call -> '' 
+arr_idx -> '' 
+exp' -> bop term exp' 
+bop -> > 
+term -> primary 
+primary -> intliteral 
+exp' -> '' 
+block -> { stmts } 
+stmts -> stmt stmts 
+stmt -> id stmt' 
+stmt' -> func_call arr_idx assign ; 
+func_call -> ( exps ) 
+exps -> exp exps' 
+exp -> term exp' 
+term -> primary 
+primary -> id func_call arr_idx 
+func_call -> '' 
+arr_idx -> '' 
+exp' -> '' 
+exps' -> '' 
+arr_idx -> '' 
+assign -> '' 
+stmts -> stmt stmts 
+stmt -> id stmt' 
+stmt' -> func_call arr_idx assign ; 
+func_call -> ( exps ) 
+exps -> exp exps' 
+exp -> term exp' 
+term -> primary 
+primary -> stringliteral 
+exp' -> '' 
+exps' -> '' 
+arr_idx -> '' 
+assign -> '' 
+stmts -> stmt stmts 
+stmt -> id stmt' 
+stmt' -> func_call arr_idx assign ; 
+func_call -> '' 
+arr_idx -> '' 
+assign -> = exp 
+exp -> term exp' 
+term -> primary 
+primary -> id func_call arr_idx 
+func_call -> '' 
+arr_idx -> '' 
+exp' -> bop term exp' 
+bop -> - 
+term -> primary 
+primary -> intliteral 
+exp' -> '' 
+stmts -> '' 
+stmts -> stmt stmts 
+stmt -> return exp ; 
+exp -> term exp' 
+term -> primary 
+primary -> intliteral 
+exp' -> '' 
+stmts -> '' 
+prog -> '' 

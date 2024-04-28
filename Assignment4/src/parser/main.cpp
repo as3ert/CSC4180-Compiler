@@ -14,11 +14,12 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    if (argc == 3) {
+    if (argc == 4) {
         string grammarFile = argv[1];
-        string testProgramFile = argv[2];
+        string testTokenFile = argv[2];
+        string outputFile = argv[3];
         auto parser = Parser(grammarFile);
-        parser.buildParsingTree(testProgramFile);
+        ofstream outFile(outputFile);
         // parser.printTerminals();
         // parser.printNonTerminals();
         // parser.printGrammar();
@@ -27,9 +28,20 @@ int main(int argc, char* argv[]) {
         // parser.printFollowSets();
         // parser.printParsingTable();
         // parser.printParsingTree
+
+        if (!outFile) {
+            cerr << "Failed to open output file." << endl;
+            return 1;
+        }
+
+        parser.buildParsingTree(testTokenFile);
+        parser.printParsingTree(parser.getParsingTreeRoot(), outFile); // Redirect output to file
+
+        outFile.close();
+        return 0;
     }
     else {
-        cerr << "Usage: " << argv[0] << " <grammar_file> <test_program_file>" << endl;
+        cerr << "Usage: " << argv[0] << " <grammar.txt> <token.txt> <output.txt>" << endl;
         return 1;
     }
 
